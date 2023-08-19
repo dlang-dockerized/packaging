@@ -21,7 +21,7 @@ export INSTALL=/opt/dmd
 export INSTALL_DIR=$INSTALL
 
 echo "Building DMD"
-make -C dmd -f posix.mak all
+make -C dmd -f posix.mak
 rm /usr/bin/dmd
 ln -s /opt/build/dmd/generated/linux/release/64/dmd /usr/bin/dmd
 

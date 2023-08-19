@@ -21,6 +21,14 @@ COPY ./scripts/build-dub.sh /opt/build/build-dub.sh
 RUN ./build-dub.sh
 
 FROM docker.io/debian:bookworm AS runtime
-RUN apt-get update && apt-get -y install build-essential
-COPY --from=builder /opt/build/dub/bin/dub /usr/bin/dub
+RUN apt-get update && apt-get -y install build-essential libphobos2-ldc-shared100
 COPY --from=builder /opt/build/dmd/generated/linux/release/64/dmd /usr/bin/dmd
+COPY --from=builder /opt/build/phobos/generated/linux/release/64/* /usr/lib/
+COPY --from=builder /opt/build/dmd/druntime/src /usr/include/dmd/druntime/import
+COPY --from=builder /opt/build/phobos/std /usr/include/dmd/phobos/std
+COPY --from=builder /opt/build/phobos/etc /usr/include/dmd/phobos/etc
+COPY --from=builder /opt/build/dub/bin/dub /usr/bin/dub
+COPY ./scripts/dmd.conf /etc/dmd.conf
+COPY ./scripts/helloworld.d /opt/helloworld.d
+# self-test
+RUN dmd -run /opt/helloworld.d
