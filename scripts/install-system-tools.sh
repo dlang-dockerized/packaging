@@ -12,14 +12,24 @@ if
 	[ "$DISTRO" = "debian" ] ||
 	[ "$DISTRO" = "ubuntu" ] ||
 	[ "$DISTRO" = "linuxmint" ]
-then
-	export DEBIAN_FRONTEND=noninteractive
-	apt-get update
-	apt-get -y install \
-		curl \
-		tar \
-		gzip \
-		build-essential \
-		ldc
-	ln -s /usr/bin/ldmd2 /usr/bin/dmd
+	then
+		export DEBIAN_FRONTEND=noninteractive
+		apt-get update
+		apt-get -y install \
+			curl \
+			tar \
+			gzip \
+			build-essential \
+			ldc
+		ln -s /usr/bin/ldmd2 /usr/bin/dmd
+elif
+	[ "$DISTRO" = "rhel" ]
+	then
+		dnf -y update
+		dnf -y install \
+			gcc \
+			curl-minimal \
+			gzip \
+			tar \
+			xz
 fi
