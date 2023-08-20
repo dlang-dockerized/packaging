@@ -30,5 +30,8 @@ COPY --from=builder /opt/build/phobos/etc /usr/include/dmd/phobos/etc
 COPY --from=builder /opt/build/dub/bin/dub /usr/bin/dub
 COPY ./scripts/dmd.conf /etc/dmd.conf
 COPY ./scripts/helloworld.d /opt/helloworld.d
+COPY ./scripts/entrypoint-dmd.sh /usr/bin/entrypoint
 # self-test
 RUN dmd -run /opt/helloworld.d
+ENTRYPOINT [ "/usr/bin/entrypoint" ]
+CMD [ "/usr/bin/dmd" ]
