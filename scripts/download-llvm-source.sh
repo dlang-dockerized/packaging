@@ -2,7 +2,7 @@
 llvmGhRepoUrl="https://github.com/llvm/llvm-project"
 
 if [ -z "$DL_LLVM_TAG" ]; then
-	echo "Error: \$DL_LDC_TAG is not set"
+	echo "Error: \$DL_LLVM_TAG is not set"
 	exit 1
 fi
 
