@@ -13,15 +13,8 @@ if
 	[ "$DISTRO" = "ubuntu" ] ||
 	[ "$DISTRO" = "linuxmint" ]
 	then
-		export DEBIAN_FRONTEND=noninteractive
-		apt-get update
-		apt-get -y install \
-			curl \
-			tar \
-			gzip \
-			build-essential \
-			ldc
-		ln -s /usr/bin/ldmd2 /usr/bin/dmd
+		# Do nothing
+		true
 elif
 	[ "$DISTRO" = "rhel" ]
 	then
