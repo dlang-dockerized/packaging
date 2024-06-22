@@ -3,6 +3,10 @@
 Commands
 
 ```sh
+./tools/ddct generate llvm 7.0.1
+./tools/ddct generate llvm 10.0.1
+./tools/ddct generate llvm 15.0.7
+
 docker build -f dockerfiles/dmd/2.105/bookworm/Dockerfile . --tag=dlang/dmd:{2.105,latest}-bookworm
 docker build -f dockerfiles/dmd/2.105/ubi9/Dockerfile . --tag=dlang/dmd:{2.105,latest}-ubi9
 docker tag dlang/dmd:latest-bookworm dlang/dmd:latest
