@@ -11,9 +11,9 @@ docker build -f dockerfiles/dmd/2.105/bookworm/Dockerfile . --tag=dlang/dmd:{2.1
 docker build -f dockerfiles/dmd/2.105/ubi9/Dockerfile . --tag=dlang/dmd:{2.105,latest}-ubi9
 docker tag dlang/dmd:latest-bookworm dlang/dmd:latest
 
-docker build -f dockerfiles/llvm/llvmorg-7.0.1/bookworm/Dockerfile . --tag=dlang/llvm:llvmorg-{7.0.1,7.0,7}-bookworm
-docker build -f dockerfiles/llvm/llvmorg-10.0.1/bookworm/Dockerfile . --tag=dlang/llvm:llvmorg-{10.0.1,10.0,10}-bookworm
-docker build -f dockerfiles/llvm/llvmorg-15.0.7/bookworm/Dockerfile . --tag=dlang/llvm:llvmorg-{15.0.7,15.0,15}-bookworm
+docker build -f containerfiles/llvm/7.0.1/bookworm/Containerfile . --tag=dlang/llvm:{7.0.1,7.0,7}-bookworm
+docker build -f containerfiles/llvm/10.0.1/bookworm/Containerfile . --tag=dlang/llvm:{10.0.1,10.0,10}-bookworm
+docker build -f containerfiles/llvm/15.0.7/bookworm/Containerfile . --tag=dlang/llvm:{15.0.7,15.0,15}-bookworm
 
 docker build -f dockerfiles/ldc/0.17.6/bookworm/Dockerfile . --tag=dlang/ldc:{0.17.6,0.17,lts}-bookworm
 docker build -f dockerfiles/ldc/1.20.1/bookworm/Dockerfile . --tag=dlang/ldc:{1.20.1,1.20}-bookworm
