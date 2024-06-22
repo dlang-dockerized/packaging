@@ -1,0 +1,477 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+#######################################################################
+# SPDX-License-Identifier: BSL-1.0
+# Copyright (c) 2024 Elias Batek
+#
+# Distributed under the Boost Software License, Version 1.0.
+#    (See accompanying file LICENSE_1_0.txt or copy at
+#          https://www.boost.org/LICENSE_1_0.txt)
+#######################################################################
+# ddct: dlang-dockerized Container Toolkit
+#######################################################################
+
+// Constants
+
+const bashTpl = __DIR__ . '/bash-tpl';
+
+const pathDefs = './definitions';
+const pathDefsBaseImages = pathDefs . '/baseimages.ini';
+const pathDefsContainerFiles = pathDefs . '/containerfiles.ini';
+
+const pathTemplates = './templates';
+
+const pathOutContainerFiles = './containerfiles';
+
+// App entry
+
+$exitCode = main($argc, $argv);
+exit($exitCode);
+
+
+// Lib
+
+function main(int $argc, array $argv): int
+{
+    if ($argc < 2) {
+        writeln('dlang-dockerized Container Toolkit');
+        errorln('No command provided.');
+        usageln($argv[0], ' <command> [<args>...]');
+        return 1;
+    }
+
+    try {
+        return runCommand($argc, $argv);
+    } catch (BashTplException $ex) {
+        errorln($ex->getMessage());
+        writeln($ex->details);
+        return 1;
+    } catch (Exception $ex) {
+        errorln($ex->getMessage());
+        return 1;
+    }
+}
+
+function runCommand(int $argc, array $argv): int
+{
+    $userCommand = $argv[1];
+
+    $commandMap = [
+        'generate' => 'cmdGenerate',
+    ];
+
+    if (!isset($commandMap[$userCommand])) {
+        errorln("`{$userCommand}` is not a ddct command.");
+        return 1;
+    }
+
+    $command = $commandMap[$userCommand];
+    return $command($argc, $argv);
+}
+
+// stdio lib
+
+function write(...$args): void
+{
+    foreach ($args as $arg) {
+        fwrite(STDERR, (string)$arg);
+    }
+}
+
+function writeln(...$args): void
+{
+    write(...[...$args, PHP_EOL]);
+}
+
+function errorln(...$args): void
+{
+    writeln('Error: ', ...$args);
+}
+
+function usageln(string $argv0, string $args)
+{
+    writeln('Usage:', PHP_EOL, "\t", $argv0, ' ', $args);
+}
+
+// INI support
+
+final class AAWrapper
+{
+    public function __construct(
+        private array $data = [],
+    ) {
+    }
+
+    public function getArray(): array
+    {
+        return $this->data;
+    }
+
+    public function get(mixed ...$keys): mixed
+    {
+        $data = $this->data;
+        foreach ($keys as $key) {
+            $data = $this->getImpl($data, $key);
+
+            if ($data === null) {
+                return null;
+            }
+        }
+
+        return $data;
+    }
+
+    private static function getImpl(array $aa, mixed $key): mixed
+    {
+        if (!isset($aa[$key])) {
+            return null;
+        }
+
+        return $aa[$key];
+    }
+
+    public function has(mixed ...$keys): bool
+    {
+        $data = &$this->data;
+        foreach ($keys as $key) {
+            if (!isset($data[$key])) {
+                return false;
+            }
+
+            $data = &$data[$key];
+        }
+
+        return true;
+    }
+
+    public function push(mixed ...$keysAndValue): void
+    {
+        $count = count($keysAndValue);
+        if ($count === 0) {
+            return;
+        }
+
+        if ($count === 1) {
+            $this->data[] = $keysAndValue[0];
+        }
+
+        $data = &$this->data;
+
+        $idxValue = ($count - 1);
+        $keys = array_slice($keysAndValue, 0, $idxValue);
+        foreach ($keys as $key) {
+            if (!isset($data[$key])) {
+                $data[$key] = [];
+            } elseif (!is_array($data[$key])) {
+                $data[$key] = [$data[$key]];
+            }
+
+            $data = &$data[$key];
+        }
+
+        $data[] = $keysAndValue[$count - 1];
+    }
+
+    public function set(mixed ...$keysAndValue): void
+    {
+        $count = count($keysAndValue);
+        if ($count === 0) {
+            return;
+        }
+
+        if ($count === 1) {
+            $this->data = $keysAndValue[0];
+        }
+
+        $data = &$this->data;
+
+        $idxLastKey = ($count - 2);
+        $idxValue = ($count - 1);
+        $keys = array_slice($keysAndValue, 0, $idxLastKey);
+        foreach ($keys as $key) {
+            if (!isset($data[$key]) || !is_array($data[$key])) {
+                $data[$key] = [];
+            }
+
+            $data = &$data[$key];
+        }
+
+        $data[$keysAndValue[$idxLastKey]] = $keysAndValue[$idxValue];
+    }
+}
+
+final class IniLoader
+{
+    /**
+     * @throws Exception
+     */
+    public static function load(string $path): array
+    {
+        if (!file_exists($path)) {
+            $baseName = basename($path);
+            throw new Exception("Cannot load `{$baseName}`: File `{$path}` does not exist.");
+        }
+
+        $iniData = parse_ini_file($path, true, INI_SCANNER_RAW);
+        if ($iniData === false) {
+            $baseName = basename($path);
+            throw new Exception("Bad `' . {$baseName} . '`: Invalid INI syntax.");
+        }
+
+        return $iniData;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public static function loadWrapped(string $path): AAWrapper
+    {
+        $iniData = self::load($path);
+        return new AAWrapper($iniData);
+    }
+}
+
+// Data
+
+function loadBaseImageDefinitions(): array
+{
+    $ini = IniLoader::loadWrapped(pathDefsBaseImages);
+    $a = $ini->get('base_images');
+
+    if ($a === null) {
+        writeln('Warning: Using empty base-image definition file `', pathDefsBaseImages, '`.');
+        return [];
+    }
+
+    return $a;
+}
+
+final class BaseImage
+{
+    public function __construct(
+        public readonly string $alias,
+        public readonly string $image,
+    ) {
+    }
+}
+
+function resolveBaseImage(string $alias): BaseImage
+{
+    $defs = loadBaseImageDefinitions();
+    return resolveBaseImageImpl($defs, $alias);
+}
+
+function resolveBaseImageImpl(array $baseImages, string $alias): BaseImage
+{
+    if (!isset($baseImages[$alias])) {
+        throw new Exception('The requested base-image `' . $alias . '` is not available.');
+    }
+
+    $resolved = $baseImages[$alias];
+
+    // resolve aliases
+    if (str_starts_with($resolved, 'alias:')) {
+        return resolveBaseImageImpl($baseImages, substr($resolved, 6));
+    }
+
+    return new BaseImage($alias, $resolved);
+}
+
+function loadContainerFileDefinitions(): AAWrapper
+{
+    return IniLoader::loadWrapped(pathDefsContainerFiles);
+}
+
+final class ContainerFileRecipe
+{
+    public function __construct(
+        public readonly string $app,
+        public readonly string $version,
+        public readonly string $template,
+        public readonly array $env,
+        public readonly array $dependencies,
+    ) {
+    }
+}
+
+function getRecipeForContainerFile(string $appName, string $appVersion): ContainerFileRecipe
+{
+    $containerFile = $appName . ':' . $appVersion;
+
+    $defs = loadContainerFileDefinitions();
+
+    if (!$defs->has($containerFile)) {
+        throw new Exception('No recipe available for the requested Containerfile `' . $containerFile . '`.');
+    }
+    $data = new AAWrapper($defs->get($containerFile));
+
+    $tpl = $data->get('template');
+    $env = $data->get('env');
+    $dep = $data->get('dependencies');
+
+    if ($env === null) {
+        $env = [];
+    }
+
+    if ($dep === null) {
+        $dep = [];
+    }
+
+    if (!is_string($tpl)) {
+        throw new Exception(
+            'Cannot process recipe for Containerfile `'
+            . $containerFile
+            . '` because of invalid `template` string.'
+        );
+    }
+
+    if (!is_array($env)) {
+        throw new Exception(
+            'Cannot process recipe for Containerfile `'
+            . $containerFile
+            . '` because of invalid `env` array.'
+        );
+    }
+
+    if (!is_array($dep)) {
+        throw new Exception(
+            'Cannot process recipe for Containerfile `'
+            . $containerFile
+            . '` because of invalid `dependencies` array.'
+        );
+    }
+
+    return new ContainerFileRecipe(
+        $appName,
+        $appVersion,
+        $tpl,
+        $env,
+        $dep,
+    );
+}
+
+// Bash-TPL
+
+final class BashTplException extends Exception
+{
+    public readonly string $details;
+
+    public function __construct(string $message, string $details)
+    {
+        parent::__construct($message);
+        $this->details = $details;
+    }
+}
+
+function bashTplCompile(string $templatePath): string
+{
+    $handle = proc_open(
+        [
+            bashTpl,
+            $templatePath,
+        ],
+        [
+            0 => ['pipe', 'r'],
+            1 => ['pipe', 'w'],
+            2 => ['pipe', 'w'],
+        ],
+        $pipes,
+        null,
+        [],
+    );
+
+    if ($handle === false) {
+        throw new Exception('Execution of command `' . $command . '` failed.');
+    }
+
+    fclose($pipes[0]);
+
+    $out = stream_get_contents($pipes[1]);
+    $err = stream_get_contents($pipes[2]);
+
+    $status = proc_close($handle);
+
+    if ($status !== 0) {
+        throw new BashTplException(
+            "Compilation of template `{$templatePath}` failed.",
+            $err,
+        );
+    }
+
+    return $out;
+}
+
+function bashTplExecuteToFile(string $compiledTemplate, array $variables, string $outputFile): void
+{
+    $handle = proc_open(
+        'sh',
+        [
+            0 => ['pipe', 'r'],
+            1 => ['file', $outputFile, 'w'],
+            2 => ['pipe', 'w'],
+        ],
+        $pipes,
+        null,
+        $variables,
+    );
+
+    if ($handle === false) {
+        throw new Exception('Template execution with `sh` failed.');
+    }
+
+    fwrite($pipes[0], $compiledTemplate);
+    fclose($pipes[0]);
+    $err = stream_get_contents($pipes[2]);
+
+    $status = proc_close($handle);
+    if ($status !== 0) {
+        throw new BashTplException('Generation of file `' . $outputFile . '` from template failed.', $err);
+    }
+}
+
+// Commands
+
+function cmdGenerate(int $argc, array $argv): int
+{
+    $usageArgs = 'generate  <app-name> <version> [<base-image>]';
+
+    if ($argc < 3) {
+        errorln('No app-name specified.');
+        usageln($argv[0], $usageArgs);
+        return 1;
+    }
+    $appName = $argv[2];
+
+    if ($argc < 4) {
+        errorln('No version specified for app `', $appName, '`.');
+        usageln($argv[0], $usageArgs);
+        return 1;
+    }
+    $appVersion = $argv[3];
+
+    $baseImageAlias = ($argc >= 5) ? $argv[4] : 'default';
+    $baseImage = resolveBaseImage($baseImageAlias);
+
+    $recipe = getRecipeForContainerFile($appName, $appVersion);
+
+    $tplPath = pathTemplates . '/' . $recipe->template;
+    $tpl = bashTplCompile($tplPath);
+
+    $containerFileDir = pathOutContainerFiles . '/' . $appName . '/' . $appVersion . '/' . $baseImage->alias;
+    $containerFilePath = $containerFileDir . '/Containerfile';
+
+    // Create target dir (if not exists)
+    if (!file_exists($containerFileDir)) {
+        mkdir($containerFileDir, 0o755, true);
+    }
+
+    $tplVars = $recipe->env;
+    $tplVars['BASE_IMAGE'] = $baseImage->image;
+
+    bashTplExecuteToFile($tpl, $tplVars, $containerFilePath);
+    writeln('Containerfile saved to `', $containerFilePath, '`.');
+    return 0;
+}
