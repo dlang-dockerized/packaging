@@ -2,7 +2,7 @@
 # build stage #
 ###############
 
-FROM <% $BASE_IMAGE %> AS build-stage
+FROM {{ $BASE_IMAGE }} AS build-stage
 
 WORKDIR /opt/build
 
@@ -16,8 +16,8 @@ RUN ./install-llvm-build-deps.sh
 
 # Download, build and install LLVM
 
-ENV DL_LLVM_TAG <% $DL_LLVM_TAG %>
-ENV LLVM_SEMVER_MAJOR <% $LLVM_SEMVER_MAJOR %>
+ENV DL_LLVM_TAG {{ $DL_LLVM_TAG }}
+ENV LLVM_SEMVER_MAJOR {{ $LLVM_SEMVER_MAJOR }}
 
 COPY ./scripts/download-llvm-source.sh .
 RUN ./download-llvm-source.sh
