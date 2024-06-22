@@ -368,6 +368,10 @@ final class BashTplException extends Exception
 
 function bashTplCompile(string $templatePath): string
 {
+    $env = [
+        'BASH_TPL_TAG_DELIMS' => '{{ }}',
+    ];
+
     $handle = proc_open(
         [
             bashTpl,
@@ -380,7 +384,7 @@ function bashTplCompile(string $templatePath): string
         ],
         $pipes,
         null,
-        [],
+        $env,
     );
 
     if ($handle === false) {
