@@ -26,22 +26,10 @@ const pathTemplates = './templates';
 
 const pathOutContainerFiles = './containerfiles';
 
-// App entry
-
-$exitCode = main($argc, $argv);
-exit($exitCode);
-
 // Lib
 
 function main(int $argc, array $argv): int
 {
-    if ($argc < 2) {
-        writeln('dlang-dockerized Container Toolkit');
-        errorln('No command provided.');
-        usageln($argv[0], '<command> [<args>...]');
-        return 1;
-    }
-
     try {
         return runCommand($argc, $argv);
     } catch (BashTplException $ex) {
@@ -56,20 +44,24 @@ function main(int $argc, array $argv): int
 
 function runCommand(int $argc, array $argv): int
 {
-    $userCommand = strtolower($argv[1]);
-
-    $commandMap = [
-        'generate' => 'cmdGenerate',
-        'generateall' => 'cmdGenerateAll',
-    ];
-
-    if (!isset($commandMap[$userCommand])) {
-        errorln("`{$userCommand}` is not a ddct command.");
+    if ($argc < 2) {
+        writeln('dlang-dockerized Container Toolkit');
+        errorln('No command provided.');
+        usageln($argv[0], '<command> [<args>...]');
         return 1;
     }
 
-    $command = $commandMap[$userCommand];
-    return $command($argc, $argv);
+    $userCommand = strtolower($argv[1]);
+
+    return match ($userCommand) {
+        'build' => cmdBuild($argc, $argv),
+        'generate' => cmdGenerate($argc, $argv),
+        'generateall' => cmdGenerateAll($argc, $argv),
+        default => (function () use ($userCommand) {
+            errorln("`{$userCommand}` is not a ddct command.");
+            return 1;
+        })(),
+    };
 }
 
 // stdio lib
@@ -96,7 +88,7 @@ function usageln(string $argv0, string $args)
     writeln('Usage:', PHP_EOL, "\t", $argv0, '  ', $args);
 }
 
-// INI support
+// Types
 
 final class AAWrapper
 {
@@ -218,7 +210,7 @@ final class IniLoader
         $iniData = parse_ini_file($path, true, INI_SCANNER_RAW);
         if ($iniData === false) {
             $baseName = basename($path);
-            throw new Exception("Bad `' . {$baseName} . '`: Invalid INI syntax.");
+            throw new Exception("Bad `{$baseName}`: Invalid INI syntax.");
         }
 
         return $iniData;
@@ -234,7 +226,337 @@ final class IniLoader
     }
 }
 
-// Data
+final class SemVer implements Stringable
+{
+    public function __construct(
+        public int $major,
+        public ?int $minor,
+        public ?int $patch,
+        public ?string $preRelease = null,
+        public ?string $buildMetadata = null,
+    ) {
+    }
+
+    public function __toString(): string
+    {
+        $s = (string)$this->major;
+        $s .= '.' . ($this->minor ?? '*');
+        $s .= '.' . ($this->patch ?? '*');
+
+        if ($this->preRelease !== null) {
+            $s .= '-' . $this->preRelease;
+        }
+
+        if ($this->buildMetadata !== null) {
+            $s .= '+' . $this->buildMetadata;
+        }
+
+        return $s;
+    }
+
+    private static function compareComponent(?int $a, ?int $b): int
+    {
+        return ($a ?? PHP_INT_MAX) <=> ($b ?? PHP_INT_MAX);
+    }
+
+    public static function compare(SemVer $a, SemVer $b): int
+    {
+        $major = self::compareComponent($a->major, $b->major);
+        if ($major !== 0) {
+            return $major;
+        }
+
+        $minor = self::compareComponent($a->minor, $b->minor);
+        if ($minor !== 0) {
+            return $minor;
+        }
+
+        $patch = self::compareComponent($a->patch, $b->patch);
+        if ($patch !== 0) {
+            return $patch;
+        }
+
+        $preReA = ($a->preRelease === null) ? 1 : 0;
+        $preReB = ($b->preRelease === null) ? 1 : 0;
+        $preRelease = $preReA <=> $preReB;
+        if ($preRelease !== 0) {
+            return $preRelease;
+        }
+
+        // both non-preReleases?
+        if ($a->preRelease === null) {
+            return 0;
+        }
+
+        return strnatcmp($a->preRelease, $b->preRelease);
+    }
+
+    private static function matchComponent(?int $a, ?int $b): bool
+    {
+        if (($a === null) || ($b === null)) {
+            return true;
+        }
+
+        return ($a === $b);
+    }
+
+    public static function match(SemVer $a, SemVer $b): bool
+    {
+        if (!self::matchComponent($a->major, $b->major)) {
+            return false;
+        }
+        if (!self::matchComponent($a->minor, $b->minor)) {
+            return false;
+        }
+        if (!self::matchComponent($a->patch, $b->patch)) {
+            return false;
+        }
+        if (!self::matchComponent($a->preRelease, $b->preRelease)) {
+            return false;
+        }
+        return self::matchComponent($a->buildMetadata, $b->buildMetadata);
+    }
+
+    public static function parse(string $input): ?self
+    {
+        if (str_starts_with($input, 'v')) {
+            $input = substr($input, 1);
+        }
+
+        $match = preg_match(
+            '/^(?P<major>0|[1-9]\d*)'
+            . '\.(?P<minor>0|[1-9]\d*)'
+            . '\.(?P<patch>0|[1-9]\d*)'
+            . '(?:-(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)'
+            . '(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?'
+            . '(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/',
+            $input,
+            $matches,
+        );
+
+        if (($match === false) || ($match === 0)) {
+            return null;
+        }
+
+        return new SemVer(
+            (int)$matches['major'],
+            (int)$matches['minor'],
+            (int)$matches['patch'],
+            $matches['prerelease'] ?? null,
+            $matches['buildmetadata'] ?? null,
+        );
+    }
+
+    public static function parseLax(string $input): ?self
+    {
+        if (str_starts_with($input, 'v')) {
+            $input = substr($input, 1);
+        }
+
+        $match = preg_match(
+            '/^(?P<major>\d*)'
+            . '(?:\.(?P<minor>[\d*]*))?'
+            . '(?:\.(?P<patch>[\d*]*))?'
+            . '(?:-(?P<prerelease>[0-9a-zA-Z-.]+))?'
+            . '(?:\+(?P<buildmetadata>[0-9a-zA-Z-.]+))?$/',
+            $input,
+            $matches,
+        );
+
+        if (($match === false) || ($match === 0)) {
+            return null;
+        }
+
+        $minor = $matches['minor'] ?? null;
+        $minor = ($minor === null) ? null : (($minor !== '*') ? (int)$minor : null);
+        $patch = $matches['patch'] ?? null;
+        $patch = ($patch === null) ? null : (($patch !== '*') ? (int)$patch : null);
+
+        return new SemVer(
+            (int)$matches['major'],
+            $minor,
+            $patch,
+            $matches['prerelease'] ?? null,
+            $matches['buildmetadata'] ?? null,
+        );
+    }
+}
+
+final class ContainerFileRecipe
+{
+    public function __construct(
+        public readonly string $app,
+        public readonly string $version,
+        public readonly string $template,
+        public readonly array $env,
+        public readonly array $dependencies,
+    ) {
+    }
+
+    public static function fromAA(array $aa, string $appName, string $appVersion): self
+    {
+        $data = new AAWrapper($aa);
+        $key = $appName . ':' . $appVersion;
+
+        $tpl = $data->get('template');
+        $env = $data->get('env');
+        $dep = $data->get('dependencies');
+
+        if ($env === null) {
+            $env = [];
+        }
+
+        if ($dep === null) {
+            $dep = [];
+        }
+
+        if (!is_string($tpl)) {
+            throw new Exception(
+                'Cannot process recipe for Containerfile `'
+                . $key
+                . '` because of invalid `template` string.'
+            );
+        }
+
+        if (!is_array($env)) {
+            throw new Exception(
+                'Cannot process recipe for Containerfile `'
+                . $key
+                . '` because of invalid `env` array.'
+            );
+        }
+
+        if (!is_array($dep)) {
+            throw new Exception(
+                'Cannot process recipe for Containerfile `'
+                . $key
+                . '` because of invalid `dependencies` array.'
+            );
+        }
+
+        return new ContainerFileRecipe(
+            $appName,
+            $appVersion,
+            $tpl,
+            $env,
+            $dep,
+        );
+    }
+}
+
+final class BaseImage
+{
+    public function __construct(
+        public readonly string $alias,
+        public readonly string $image,
+    ) {
+    }
+
+    public static function resolve(string $alias): BaseImage
+    {
+        $defs = loadBaseImageDefinitions();
+        return self::resolveImpl($defs, $alias);
+    }
+
+    private static function resolveImpl(array $baseImages, string $alias): BaseImage
+    {
+        if (!isset($baseImages[$alias])) {
+            throw new Exception('The requested base-image `' . $alias . '` is not available.');
+        }
+
+        $resolved = $baseImages[$alias];
+
+        // resolve aliases
+        if (str_starts_with($resolved, 'alias:')) {
+            return self::resolveImpl($baseImages, substr($resolved, 6));
+        }
+
+        return new BaseImage($alias, $resolved);
+    }
+}
+
+final class ContainerFileMapEntry
+{
+    public function __construct(
+        public readonly SemVer $version,
+        public readonly ContainerFileRecipe $recipe,
+    ) {
+    }
+}
+
+final class ContainerFileMap
+{
+    private readonly AAWrapper $data;
+
+    public function __construct(
+        array $sortedData,
+    ) {
+        $this->data = new AAWrapper($sortedData);
+    }
+
+    public function has(string $name, SemVer $version): bool
+    {
+        return ($this->get($name, $version) !== null);
+    }
+
+    public function get(string $name, SemVer $version): ?ContainerFileRecipe
+    {
+        $appEntries = $this->data->get($name);
+        if ($appEntries === null) {
+            return null;
+        }
+
+        foreach ($appEntries as $entry) {
+            if (SemVer::match($entry->version, $version)) {
+                return $entry->recipe;
+            }
+        }
+
+        return null;
+    }
+
+    public static function parseDefinitions(array $definitions): self
+    {
+        $tree = new AAWrapper([]);
+        foreach ($definitions as $key => $recipeRaw) {
+            $keyData = parseContainerFileKey($key);
+            $appName = $keyData[0];
+            $appVersion = $keyData[1];
+            $semver = SemVer::parse($appVersion);
+
+            if ($semver === null) {
+                writeln('Warning: Ignoring Containerfile recipe with invalid semver `', $key, '`.');
+                continue;
+            }
+
+            $recipe = ContainerFileRecipe::fromAA($recipeRaw, $appName, $appVersion);
+
+            // Run duplicate check, if app already exists.
+            if ($tree->has($appName)) {
+                foreach ($tree->get($appName) as $entry) {
+                    if ($entry->recipe->version === $appVersion) {
+                        writeln('Warning: Skipping duplicate Containerfile recipe entry `', $key, '`.');
+                        continue 2;
+                    }
+                }
+            }
+
+            $entry = new ContainerFileMapEntry($semver, $recipe);
+            $tree->push($appName, $entry);
+        }
+
+        $tree = $tree->getArray();
+        foreach ($tree as &$appVersionList) {
+            usort($appVersionList, function (ContainerFileMapEntry $a, ContainerFileMapEntry $b) {
+                return SemVer::compare($b->version, $a->version);
+            });
+        }
+
+        return new ContainerFileMap($tree);
+    }
+}
+
+// Functions
 
 function loadBaseImageDefinitions(): array
 {
@@ -247,37 +569,6 @@ function loadBaseImageDefinitions(): array
     }
 
     return $a;
-}
-
-final class BaseImage
-{
-    public function __construct(
-        public readonly string $alias,
-        public readonly string $image,
-    ) {
-    }
-}
-
-function resolveBaseImage(string $alias): BaseImage
-{
-    $defs = loadBaseImageDefinitions();
-    return resolveBaseImageImpl($defs, $alias);
-}
-
-function resolveBaseImageImpl(array $baseImages, string $alias): BaseImage
-{
-    if (!isset($baseImages[$alias])) {
-        throw new Exception('The requested base-image `' . $alias . '` is not available.');
-    }
-
-    $resolved = $baseImages[$alias];
-
-    // resolve aliases
-    if (str_starts_with($resolved, 'alias:')) {
-        return resolveBaseImageImpl($baseImages, substr($resolved, 6));
-    }
-
-    return new BaseImage($alias, $resolved);
 }
 
 function parseContainerFileKey(string $key): array|bool
@@ -296,77 +587,22 @@ function loadContainerFileDefinitions(): AAWrapper
     return IniLoader::loadWrapped(pathDefsContainerFiles);
 }
 
-final class ContainerFileRecipe
-{
-    public function __construct(
-        public readonly string $app,
-        public readonly string $version,
-        public readonly string $template,
-        public readonly array $env,
-        public readonly array $dependencies,
-    ) {
-    }
-}
-
 function getRecipeForContainerFile(string $appName, string $appVersion): ContainerFileRecipe
 {
     $containerFile = $appName . ':' . $appVersion;
-
     $defs = loadContainerFileDefinitions();
 
     if (!$defs->has($containerFile)) {
         throw new Exception('No recipe available for the requested Containerfile `' . $containerFile . '`.');
     }
-    $data = new AAWrapper($defs->get($containerFile));
 
-    $tpl = $data->get('template');
-    $env = $data->get('env');
-    $dep = $data->get('dependencies');
-
-    if ($env === null) {
-        $env = [];
-    }
-
-    if ($dep === null) {
-        $dep = [];
-    }
-
-    if (!is_string($tpl)) {
-        throw new Exception(
-            'Cannot process recipe for Containerfile `'
-            . $containerFile
-            . '` because of invalid `template` string.'
-        );
-    }
-
-    if (!is_array($env)) {
-        throw new Exception(
-            'Cannot process recipe for Containerfile `'
-            . $containerFile
-            . '` because of invalid `env` array.'
-        );
-    }
-
-    if (!is_array($dep)) {
-        throw new Exception(
-            'Cannot process recipe for Containerfile `'
-            . $containerFile
-            . '` because of invalid `dependencies` array.'
-        );
-    }
-
-    return new ContainerFileRecipe(
-        $appName,
-        $appVersion,
-        $tpl,
-        $env,
-        $dep,
-    );
+    $recipe = $defs->get($containerFile);
+    return ContainerFileRecipe::fromAA($recipe, $appName, $appVersion);
 }
 
 function generateContainerFile($appName, $appVersion, $baseImageAlias): string
 {
-    $baseImage = resolveBaseImage($baseImageAlias);
+    $baseImage = BaseImage::resolve($baseImageAlias);
 
     $recipe = getRecipeForContainerFile($appName, $appVersion);
 
@@ -387,6 +623,35 @@ function generateContainerFile($appName, $appVersion, $baseImageAlias): string
 
     bashTplExecuteToFile($tpl, $tplVars, $containerFilePath);
     return $containerFilePath;
+}
+
+function readArgsAppNameVersionBaseimage(
+    int $argc,
+    array $argv,
+    string $command,
+    ?string &$outAppName,
+    ?string &$outAppVersion,
+    ?string &$outBaseImageAlias
+): bool {
+    $usageArgs = $command . ' <app-name> <version> [<base-image>]';
+
+    if ($argc < 3) {
+        errorln('No app-name specified.');
+        usageln($argv[0], $usageArgs);
+        return false;
+    }
+    $outAppName = $argv[2];
+
+    if ($argc < 4) {
+        errorln('No version specified for app `', $outAppName, '`.');
+        usageln($argv[0], $usageArgs);
+        return false;
+    }
+    $outAppVersion = $argv[3];
+
+    $outBaseImageAlias = ($argc >= 5) ? $argv[4] : 'default';
+
+    return true;
 }
 
 // Bash-TPL
@@ -424,7 +689,7 @@ function bashTplCompile(string $templatePath): string
     );
 
     if ($handle === false) {
-        throw new Exception('Execution of command `' . $command . '` failed.');
+        throw new Exception('Execution of command `' . bashTpl . '` failed.');
     }
 
     fclose($pipes[0]);
@@ -474,28 +739,55 @@ function bashTplExecuteToFile(string $compiledTemplate, array $variables, string
 
 // Commands
 
+function cmdBuild(int $argc, array $argv): int
+{
+    $argsOk = readArgsAppNameVersionBaseimage(
+        $argc,
+        $argv,
+        'build',
+        $appName,
+        $appVersion,
+        $baseImageAlias
+    );
+
+    if (!$argsOk) {
+        return 1;
+    }
+
+    $defs = loadContainerFileDefinitions();
+    $map = ContainerFileMap::parseDefinitions($defs->getArray());
+    $semver = SemVer::parseLax($appVersion);
+
+    $recipe = $map->get($appName, $semver);
+    if ($recipe === null) {
+        errorln('No recipe found for requested container `', $appName, '`:`', $semver, '`');
+        return 1;
+    }
+
+    writeln('Found `', $recipe->app, ':', $recipe->version, '`.');
+
+    // TODO
+    errorln('Not implemented yet.');
+
+    return 0;
+}
+
 function cmdGenerate(int $argc, array $argv): int
 {
-    $usageArgs = 'generate <app-name> <version> [<base-image>]';
+    $argsOk = readArgsAppNameVersionBaseimage(
+        $argc,
+        $argv,
+        'generate',
+        $appName,
+        $appVersion,
+        $baseImageAlias
+    );
 
-    if ($argc < 3) {
-        errorln('No app-name specified.');
-        usageln($argv[0], $usageArgs);
+    if (!$argsOk) {
         return 1;
     }
-    $appName = $argv[2];
-
-    if ($argc < 4) {
-        errorln('No version specified for app `', $appName, '`.');
-        usageln($argv[0], $usageArgs);
-        return 1;
-    }
-    $appVersion = $argv[3];
-
-    $baseImageAlias = ($argc >= 5) ? $argv[4] : 'default';
 
     $savedAs = generateContainerFile($appName, $appVersion, $baseImageAlias);
-
     writeln('Containerfile saved to `', $savedAs, '`.');
     return 0;
 }
@@ -527,3 +819,8 @@ function cmdGenerateAll(int $argc, array $argv): int
 
     return ($error) ? 1 : 0;
 }
+
+// App entry
+// (This code is here at the end in order to resolve issues caused by limitations of “early binding”.)
+$exitCode = main($argc, $argv);
+exit($exitCode);
