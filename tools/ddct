@@ -31,7 +31,6 @@ const pathOutContainerFiles = './containerfiles';
 $exitCode = main($argc, $argv);
 exit($exitCode);
 
-
 // Lib
 
 function main(int $argc, array $argv): int
@@ -39,7 +38,7 @@ function main(int $argc, array $argv): int
     if ($argc < 2) {
         writeln('dlang-dockerized Container Toolkit');
         errorln('No command provided.');
-        usageln($argv[0], ' <command> [<args>...]');
+        usageln($argv[0], '<command> [<args>...]');
         return 1;
     }
 
@@ -57,10 +56,11 @@ function main(int $argc, array $argv): int
 
 function runCommand(int $argc, array $argv): int
 {
-    $userCommand = $argv[1];
+    $userCommand = strtolower($argv[1]);
 
     $commandMap = [
         'generate' => 'cmdGenerate',
+        'generateall' => 'cmdGenerateAll',
     ];
 
     if (!isset($commandMap[$userCommand])) {
@@ -93,7 +93,7 @@ function errorln(...$args): void
 
 function usageln(string $argv0, string $args)
 {
-    writeln('Usage:', PHP_EOL, "\t", $argv0, ' ', $args);
+    writeln('Usage:', PHP_EOL, "\t", $argv0, '  ', $args);
 }
 
 // INI support
@@ -280,6 +280,17 @@ function resolveBaseImageImpl(array $baseImages, string $alias): BaseImage
     return new BaseImage($alias, $resolved);
 }
 
+function parseContainerFileKey(string $key): array|bool
+{
+    $data = explode(':', $key, 2);
+
+    if (count($data) !== 2) {
+        return false;
+    }
+
+    return $data;
+}
+
 function loadContainerFileDefinitions(): AAWrapper
 {
     return IniLoader::loadWrapped(pathDefsContainerFiles);
@@ -351,6 +362,31 @@ function getRecipeForContainerFile(string $appName, string $appVersion): Contain
         $env,
         $dep,
     );
+}
+
+function generateContainerFile($appName, $appVersion, $baseImageAlias): string
+{
+    $baseImage = resolveBaseImage($baseImageAlias);
+
+    $recipe = getRecipeForContainerFile($appName, $appVersion);
+
+    $tplPath = pathTemplates . '/' . $recipe->template;
+    $tpl = bashTplCompile($tplPath);
+
+    $containerFileDir = pathOutContainerFiles . '/' . $appName . '/' . $appVersion . '/' . $baseImage->alias;
+    $containerFilePath = $containerFileDir . '/Containerfile';
+
+    // Create target dir (if not exists)
+    if (!file_exists($containerFileDir)) {
+        mkdir($containerFileDir, 0o755, true);
+    }
+
+    $tplVars = $recipe->env;
+    $tplVars['BASE_IMAGE'] = $baseImage->image;
+    $tplVars['BASE_IMAGE_ALIAS'] = $baseImage->alias;
+
+    bashTplExecuteToFile($tpl, $tplVars, $containerFilePath);
+    return $containerFilePath;
 }
 
 // Bash-TPL
@@ -440,7 +476,7 @@ function bashTplExecuteToFile(string $compiledTemplate, array $variables, string
 
 function cmdGenerate(int $argc, array $argv): int
 {
-    $usageArgs = 'generate  <app-name> <version> [<base-image>]';
+    $usageArgs = 'generate <app-name> <version> [<base-image>]';
 
     if ($argc < 3) {
         errorln('No app-name specified.');
@@ -457,26 +493,37 @@ function cmdGenerate(int $argc, array $argv): int
     $appVersion = $argv[3];
 
     $baseImageAlias = ($argc >= 5) ? $argv[4] : 'default';
-    $baseImage = resolveBaseImage($baseImageAlias);
 
-    $recipe = getRecipeForContainerFile($appName, $appVersion);
+    $savedAs = generateContainerFile($appName, $appVersion, $baseImageAlias);
 
-    $tplPath = pathTemplates . '/' . $recipe->template;
-    $tpl = bashTplCompile($tplPath);
+    writeln('Containerfile saved to `', $savedAs, '`.');
+    return 0;
+}
 
-    $containerFileDir = pathOutContainerFiles . '/' . $appName . '/' . $appVersion . '/' . $baseImage->alias;
-    $containerFilePath = $containerFileDir . '/Containerfile';
-
-    // Create target dir (if not exists)
-    if (!file_exists($containerFileDir)) {
-        mkdir($containerFileDir, 0o755, true);
+function cmdGenerateAll(int $argc, array $argv): int
+{
+    if ($argc > 3) {
+        errorln('Too many arguments.');
+        usageln($argv[0], 'generateall [<base-image>]');
+        return 1;
     }
 
-    $tplVars = $recipe->env;
-    $tplVars['BASE_IMAGE'] = $baseImage->image;
-    $tplVars['BASE_IMAGE_ALIAS'] = $baseImage->alias;
+    $baseImageAlias = ($argc >= 3) ? $argv[2] : 'default';
 
-    bashTplExecuteToFile($tpl, $tplVars, $containerFilePath);
-    writeln('Containerfile saved to `', $containerFilePath, '`.');
-    return 0;
+    $containerDefs = loadContainerFileDefinitions()->getArray();
+    $error = false;
+    foreach ($containerDefs as $key => $containerDef) {
+        $app = parseContainerFileKey($key);
+        if ($app === false) {
+            errorln('Encountered invalid Containerfile recipe definition `' . $key . '`.');
+            $error = true;
+            continue;
+        }
+
+        writeln('Generating Containerfile for `', $key, '`.');
+        $savedAs = generateContainerFile($app[0], $app[1], $baseImageAlias);
+        writeln('Containerfile saved to `', $savedAs, '`.');
+    }
+
+    return ($error) ? 1 : 0;
 }
