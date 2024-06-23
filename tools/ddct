@@ -411,7 +411,7 @@ function bashTplCompile(string $templatePath): string
 function bashTplExecuteToFile(string $compiledTemplate, array $variables, string $outputFile): void
 {
     $handle = proc_open(
-        'sh',
+        'bash',
         [
             0 => ['pipe', 'r'],
             1 => ['file', $outputFile, 'w'],
@@ -423,7 +423,7 @@ function bashTplExecuteToFile(string $compiledTemplate, array $variables, string
     );
 
     if ($handle === false) {
-        throw new Exception('Template execution with `sh` failed.');
+        throw new Exception('Template execution with `bash` failed.');
     }
 
     fwrite($pipes[0], $compiledTemplate);
