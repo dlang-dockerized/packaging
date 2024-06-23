@@ -2,8 +2,10 @@
 # imported images #
 ###################
 
-FROM dlang/llvm:llvmorg-10.0-bookworm AS llvm-imported
-FROM dlang/ldc:lts-bookworm AS ldc-bootstrap-imported
+FROM dlang-dockerized/{{ $LLVM_IMAGE }}-{{ $BASE_IMAGE_ALIAS }} AS llvm-imported
+% if [ -n "$LDC_BOOT_IMAGE" ]; then
+	FROM dlang-dockerized/{{ $LDC_BOOT_IMAGE }}-{{ $BASE_IMAGE_ALIAS }} AS ldc-bootstrap-imported
+% fi
 
 ###############
 # build stage #
@@ -21,31 +23,46 @@ RUN ./install-common-system-tools.sh
 COPY ./scripts/install-ldc-build-deps.sh .
 RUN ./install-ldc-build-deps.sh
 
-# Copy prebuilt LLVM from dlang/llvm
-
+# Copy prebuilt LLVM from dlang-dockerized/llvm
 COPY --from=llvm-imported /opt/llvm/ /opt/llvm/
 
-# Copy prebuilt LDC from dlang/ldc
+% if [ -n "$LDC_BOOT_IMAGE" ]; then
+	# Copy prebuilt LDC from dlang-dockerized/ldc
+	COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc-bootstrap/
+	RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.conf
+% fi
 
-COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc-bootstrap/
-RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.conf
+# Download, build and install LDC
 
-# Download, build and install LCD
-
-ENV DL_LDC_TAG v1.20.1
-ENV LDC_SEMVER_MAJOR 1
-ENV LDC_SEMVER_MINOR 20
+ENV DL_LDC_TAG {{ $DL_LDC_TAG }}
+ENV LDC_SEMVER_MAJOR {{ $LDC_SEMVER_MAJOR }}
+ENV LDC_SEMVER_MINOR {{ $LDC_SEMVER_MINOR }}
 
 COPY ./scripts/download-ldc-source.sh .
 RUN ./download-ldc-source.sh
 
 COPY ./scripts/build-ldc.sh .
-RUN DMD=/opt/ldc-bootstrap/bin/ldmd2 ./build-ldc.sh
+% if [ -n "$LDC_BOOT_IMAGE" ]; then
+	RUN DMD=/opt/ldc-bootstrap/bin/ldmd2 ./build-ldc.sh
+% else
+	RUN ./build-ldc.sh
+% fi
 
 # Self-test
 COPY ./resources/helloworld.d /opt/helloworld.d
 RUN /opt/ldc/bin/ldmd2 -run /opt/helloworld.d
 RUN rm /opt/helloworld.d
+
+% if [ -n "$DL_DUB_TAG" ]; then
+	# Download, build and install DUB
+	ENV DL_DUB_TAG {{ $DL_DUB_TAG }}
+
+	COPY ./scripts/download-dub-source.sh .
+	RUN ./download-dub-source.sh
+
+	COPY ./scripts/build-dub.sh .
+	RUN DMD=/opt/ldc/bin/ldmd2 ./build-dub.sh
+% fi
 
 ################
 # export stage #
@@ -55,6 +72,9 @@ FROM docker.io/debian:bookworm AS export-stage
 
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive && \
 	apt-get -y install --no-install-recommends \
+		% if [ -z "$LDC_BOOT_IMAGE" ]; then
+			libconfig++ \
+		% fi
 		build-essential && \
 	rm -rf /var/lib/apt/lists/*
 
@@ -64,6 +84,10 @@ COPY --from=build-stage /opt/ldc /opt/ldc
 COPY ./resources/helloworld.d /opt/helloworld.d
 RUN /opt/ldc/bin/ldmd2 -run /opt/helloworld.d
 RUN rm /opt/helloworld.d
+
+% if [ -n "$DL_DUB_TAG" ]; then
+	COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
+% fi
 
 COPY ./scripts/entrypoint-ldc.sh /usr/bin/entrypoint
 
