@@ -56,7 +56,7 @@ function runCommand(int $argc, array $argv): int
     return match ($userCommand) {
         'build' => cmdBuild($argc, $argv),
         'generate' => cmdGenerate($argc, $argv),
-        'generateall' => cmdGenerateAll($argc, $argv),
+        'generate-all' => cmdGenerateAll($argc, $argv),
         default => (function () use ($userCommand) {
             errorln("`{$userCommand}` is not a ddct command.");
             return 1;
