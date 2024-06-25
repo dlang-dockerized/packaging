@@ -70,13 +70,9 @@ RUN rm /opt/helloworld.d
 
 FROM docker.io/debian:bookworm AS export-stage
 
-RUN apt-get update && export DEBIAN_FRONTEND=noninteractive && \
-	apt-get -y install --no-install-recommends \
-		% if [ -z "$LDC_BOOT_IMAGE" ]; then
-			libconfig++ \
-		% fi
-		build-essential && \
-	rm -rf /var/lib/apt/lists/*
+ENV LDC_BOOT_IMAGE {{ $LDC_BOOT_IMAGE }}
+COPY ./scripts/prepare-runtime-environment.sh .
+RUN ./prepare-runtime-environment.sh && rm ./scripts/prepare-runtime-environment.sh
 
 COPY --from=build-stage /opt/ldc /opt/ldc
 
