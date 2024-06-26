@@ -66,7 +66,7 @@ class ContainerFile
         $tplPath = Path::templatesDir . '/' . $recipe->template;
         $tpl = BashTpl::compile($tplPath);
 
-        $containerFileDir = self::getContainerFileTargetDir($appName, $appVersion, $baseImageAlias);
+        $containerFileDir = self::getContainerFileTargetDir($appName, $appVersion, $baseImage);
         $containerFilePath = $containerFileDir . '/Containerfile';
 
         // Create target dir (if not exists)
