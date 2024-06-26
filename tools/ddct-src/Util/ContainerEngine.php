@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace DlangDockerized\Ddct\Util;
 
+use DlangDockerized\Ddct\Datatype\ContainerImage;
 use DlangDockerized\Ddct\Datatype\ContainerTag;
 use Exception;
 
@@ -33,7 +34,7 @@ class ContainerEngine
         return json_encode($data, JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_UNESCAPED_SLASHES);
     }
 
-    private function executeCommand(string ...$args): string
+    private function executeCommand(string ...$args): array
     {
         $cmd = [
             $this->containerEngine,
@@ -57,7 +58,17 @@ class ContainerEngine
         }
 
         fclose($pipes[0]);
-        $std = stream_get_contents($pipes[1]);
+
+        $out = [];
+        while (true) {
+            $line = stream_get_line($pipes[1], PHP_INT_MAX, "\n");
+            if ($line === false) {
+                break;
+            }
+
+            $out[] = $line;
+        }
+
         $err = stream_get_contents($pipes[2]);
 
         fclose($pipes[1]);
@@ -66,11 +77,13 @@ class ContainerEngine
         $status = proc_close($handle);
         if ($status !== 0) {
             throw new Exception(
-                'Command `' . self::jsonEncodeCmdArgs($cmd) . '` failed with status `' . $status . '`: ' . $err
+                'Command `' . self::jsonEncodeCmdArgs($cmd)
+                . '` failed with status `' . $status . '`: '
+                . rtrim($err)
             );
         }
 
-        return $std;
+        return $out;
     }
 
     private function passthruCommand(string ...$args): void
@@ -115,22 +128,22 @@ class ContainerEngine
         $this->passthruCommand(...$args);
     }
 
+    /**
+     * @return ContainerImage[]
+     */
     public function listImages(): array
     {
         $result = $this->executeCommand('images', '--format=json');
-        $result = json_decode($result, true, JSON_THROW_ON_ERROR);
 
-        if ($result === null) {
-            return [];
-        }
+        return array_map(function (string $json) {
+            $data = json_decode($json, true, JSON_THROW_ON_ERROR);
+            return ContainerImage::fromAA($data);
+        }, $result);
+    }
 
-        if (!is_array($result)) {
-            throw new Exception(
-                'Unexpected output from `images` command; array expected, got `' . json_encode($result) . '`.'
-            );
-        }
-
-        return $result;
+    public function tagImage(string $sourceImage, string $tag): void
+    {
+        $this->passthruCommand('tag', $sourceImage, $tag);
     }
 
     public static function detectContainerEngine(): ?string

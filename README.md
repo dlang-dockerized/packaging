@@ -9,14 +9,15 @@ docker build -f dockerfiles/dmd/2.105/bookworm/Dockerfile . --tag=dlang-dockeriz
 docker build -f dockerfiles/dmd/2.105/ubi9/Dockerfile . --tag=dlang-dockerized/dmd:{2.105,latest}-ubi9
 docker tag dlang-dockerized/dmd:latest-bookworm dlang-dockerized/dmd:latest
 
-docker build -f containerfiles/llvm/7.0.1/bookworm/Containerfile . --tag=dlang-dockerized/llvm:{7.0.1,7.0,7}-bookworm
-docker build -f containerfiles/llvm/10.0.1/bookworm/Containerfile . --tag=dlang-dockerized/llvm:{10.0.1,10.0,10}-bookworm
-docker build -f containerfiles/llvm/15.0.7/bookworm/Containerfile . --tag=dlang-dockerized/llvm:{15.0.7,15.0,15}-bookworm
+#./tools/ddct build llvm 7
+#./tools/ddct build llvm 10
+#./tools/ddct build llvm 15
 
-docker build -f dockerfiles/ldc/0.17.6/bookworm/Dockerfile . --tag=dlang-dockerized/ldc:{0.17.6,0.17,lts}-bookworm
-docker build -f dockerfiles/ldc/1.20.1/bookworm/Dockerfile . --tag=dlang-dockerized/ldc:{1.20.1,1.20}-bookworm
-docker build -f dockerfiles/ldc/1.33.0/bookworm/Dockerfile . --tag=dlang-dockerized/ldc:{1.33.0,1.33,latest}-bookworm
-docker tag dlang-dockerized/ldc:latest-bookworm dlang-dockerized/ldc:latest
+#./tools/ddct build ldc 0.17.6
+#./tools/ddct build ldc 1.20.1
+./tools/ddct build ldc 1.33.0
+
+./tools/ddct tag
 ```
 
 ```
