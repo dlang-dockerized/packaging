@@ -41,16 +41,32 @@ class ContainerFile
         return ContainerFileRecipe::fromAA($recipe, $appName, $appVersion);
     }
 
+    public static function getContainerFileTargetDir(
+        string $appName,
+        string $appVersion,
+        BaseImage $baseImage,
+    ): string {
+        return Path::containerFilesOutputDir . '/' . $appName . '/' . $appVersion . '/' . $baseImage->alias;
+    }
+
+    public static function getContainerFileTargetPath(
+        string $appName,
+        string $appVersion,
+        BaseImage $baseImage,
+    ): string {
+        $dir = self::getContainerFileTargetDir($appName, $appVersion, $baseImage);
+        return $dir . '/Containerfile';
+    }
+
     public static function generateFile($appName, $appVersion, $baseImageAlias): string
     {
         $baseImage = BaseImage::resolve($baseImageAlias);
-
         $recipe = self::loadRecipe($appName, $appVersion);
 
         $tplPath = Path::templatesDir . '/' . $recipe->template;
         $tpl = BashTpl::compile($tplPath);
 
-        $containerFileDir = Path::containerFilesOutputDir . '/' . $appName . '/' . $appVersion . '/' . $baseImage->alias;
+        $containerFileDir = self::getContainerFileTargetDir($appName, $appVersion, $baseImageAlias);
         $containerFilePath = $containerFileDir . '/Containerfile';
 
         // Create target dir (if not exists)

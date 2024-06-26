@@ -34,9 +34,9 @@ COPY --from=llvm-imported /opt/llvm/ /opt/llvm/
 
 # Download, build and install LDC
 
-ENV DL_LDC_TAG {{ $DL_LDC_TAG }}
-ENV LDC_SEMVER_MAJOR {{ $LDC_SEMVER_MAJOR }}
-ENV LDC_SEMVER_MINOR {{ $LDC_SEMVER_MINOR }}
+ENV DL_LDC_TAG={{ $DL_LDC_TAG }}
+ENV LDC_SEMVER_MAJOR={{ $LDC_SEMVER_MAJOR }}
+ENV LDC_SEMVER_MINOR={{ $LDC_SEMVER_MINOR }}
 
 COPY ./scripts/download-ldc-source.sh .
 RUN ./download-ldc-source.sh
@@ -55,7 +55,7 @@ RUN rm /opt/helloworld.d
 
 % if [ -n "$DL_DUB_TAG" ]; then
 	# Download, build and install DUB
-	ENV DL_DUB_TAG {{ $DL_DUB_TAG }}
+	ENV DL_DUB_TAG={{ $DL_DUB_TAG }}
 
 	COPY ./scripts/download-dub-source.sh .
 	RUN ./download-dub-source.sh
@@ -70,7 +70,7 @@ RUN rm /opt/helloworld.d
 
 FROM docker.io/debian:bookworm AS export-stage
 
-ENV LDC_BOOT_IMAGE {{ $LDC_BOOT_IMAGE }}
+ENV LDC_BOOT_IMAGE={{ $LDC_BOOT_IMAGE }}
 COPY ./scripts/prepare-runtime-environment.sh .
 RUN ./prepare-runtime-environment.sh && rm ./scripts/prepare-runtime-environment.sh
 

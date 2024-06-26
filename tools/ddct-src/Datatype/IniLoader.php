@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace DlangDockerized\Ddct\Datatype;
 
-use DlangDockerized\Ddct\Datatype\AAWrapper;
 use Exception;
 
 final class IniLoader

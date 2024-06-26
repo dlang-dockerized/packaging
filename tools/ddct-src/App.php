@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace DlangDockerized\Ddct;
 
+use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileMap;
+use DlangDockerized\Ddct\Datatype\ContainerTag;
 use DlangDockerized\Ddct\Datatype\SemVer;
 use DlangDockerized\Ddct\Util\BashTplException;
+use DlangDockerized\Ddct\Util\ContainerEngine;
 use DlangDockerized\Ddct\Util\ContainerFile;
 use DlangDockerized\Ddct\Util\ContainerFileDefinitions;
 use Exception;
@@ -40,14 +43,18 @@ final class App
 
         return match ($userCommand) {
             'build' => $this->build($argc, $argv),
+            'detect-engine' => $this->detectEngine($argc, $argv),
             'generate' => $this->generate($argc, $argv),
             'generate-all' => $this->generateAll($argc, $argv),
 
-            default => (function () use ($userCommand) {
-                errorln("`{$userCommand}` is not a ddct command.");
-                return 1;
-            })(),
+            default => $this->notACommand($userCommand),
         };
+    }
+
+    private function notACommand(string $userCommand): int
+    {
+        errorln("`{$userCommand}` is not a ddct command.");
+        return 1;
     }
 
     private function readArgsAppNameVersionBaseimage(
@@ -116,9 +123,31 @@ final class App
             return 1;
         }
 
-        // TODO
-        errorln('Not implemented yet.');
+        $baseImage = BaseImage::resolve($baseImageAlias);
+        $containerFilePath = ContainerFile::getContainerFileTargetPath($recipe->app, $recipe->version, $baseImage);
+        $tag = ContainerTag::makeFromRecipe($recipe, $baseImage);
 
+        $engine = new ContainerEngine();
+        $engine->build($containerFilePath, $tag);
+
+        writeln('Done.');
+
+        return 0;
+    }
+
+    private function detectEngine(int $argc, array $argv): int
+    {
+        try {
+            $detected = ContainerEngine::detectContainerEngine();
+        } catch (Exception) {
+            return 1;
+        }
+
+        if ($detected === null) {
+            return 1;
+        }
+
+        outputln($detected);
         return 0;
     }
 
