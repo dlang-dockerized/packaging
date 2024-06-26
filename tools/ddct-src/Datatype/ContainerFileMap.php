@@ -73,6 +73,7 @@ final class ContainerFileMap
                 return SemVer::compare($b->version, $a->version);
             });
         }
+        unset($appVersionList);
 
         return new ContainerFileMap($tree);
     }

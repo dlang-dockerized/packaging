@@ -12,6 +12,7 @@ use DlangDockerized\Ddct\Util\BashTplException;
 use DlangDockerized\Ddct\Util\ContainerEngine;
 use DlangDockerized\Ddct\Util\ContainerFile;
 use DlangDockerized\Ddct\Util\ContainerFileDefinitions;
+use DlangDockerized\Ddct\Util\Tagger;
 use Exception;
 
 final class App
@@ -46,6 +47,7 @@ final class App
             'detect-engine' => $this->detectEngine($argc, $argv),
             'generate' => $this->generate($argc, $argv),
             'generate-all' => $this->generateAll($argc, $argv),
+            'tag' => $this->tag($argc, $argv),
 
             default => $this->notACommand($userCommand),
         };
@@ -197,5 +199,13 @@ final class App
         }
 
         return ($error) ? 1 : 0;
+    }
+
+    private function tag(int $argc, array $argv): int
+    {
+        $engine = new ContainerEngine();
+        $tagger = new Tagger($engine);
+        $tagger->applyAll();
+        return 0;
     }
 }
