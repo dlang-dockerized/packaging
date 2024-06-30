@@ -64,8 +64,8 @@ class Tagger
                 continue;
             }
 
-            $version = ContainerVersionTag::parseLax($image->tag);
-            if (($version === null) || ($version->preRelease === null)) {
+            $version = ContainerVersionTag::parse($image->tag);
+            if (($version === null) || ($version->baseImageAlias === null)) {
                 continue;
             }
 
