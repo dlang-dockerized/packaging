@@ -16,6 +16,12 @@ final class ContainerTag
     ) {
     }
 
+    public function parseVersion(): ContainerVersionTag
+    {
+        $semver = SemVer::parseLax($this->appVersion);
+        return ContainerVersionTag::fromSemVer($semver, $this->baseImageAlias);
+    }
+
     public function __toString(): string
     {
         return

@@ -37,6 +37,24 @@ final class ContainerFileMap
         return null;
     }
 
+    public function getByKey(string $key, bool $parseLax = true): ?ContainerFileRecipe
+    {
+        $parsedKey = ContainerFile::parseKey($key);
+        if ($parsedKey === false) {
+            return null;
+        }
+
+        $version = ($parseLax)
+            ? SemVer::parseLax($parsedKey[1])
+            : SemVer::parse($parsedKey[1]);
+
+        if ($version === null) {
+            return null;
+        }
+
+        return $this->get($parsedKey[0], $version);
+    }
+
     public static function parseDefinitions(array $definitions): self
     {
         $tree = new AAWrapper([]);
