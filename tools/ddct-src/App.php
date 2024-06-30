@@ -6,9 +6,11 @@ namespace DlangDockerized\Ddct;
 
 use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileMap;
-use DlangDockerized\Ddct\Datatype\ContainerTag;
+use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
 use DlangDockerized\Ddct\Datatype\SemVer;
 use DlangDockerized\Ddct\Util\BashTplException;
+use DlangDockerized\Ddct\Util\ContainerBuilder;
+use DlangDockerized\Ddct\Util\ContainerBuilderStatus;
 use DlangDockerized\Ddct\Util\ContainerEngine;
 use DlangDockerized\Ddct\Util\ContainerFile;
 use DlangDockerized\Ddct\Util\ContainerFileDefinitions;
@@ -44,9 +46,11 @@ final class App
 
         return match ($userCommand) {
             'build' => $this->build($argc, $argv),
+            'can-build' => $this->canBuild($argc, $argv),
             'detect-engine' => $this->detectEngine($argc, $argv),
             'generate' => $this->generate($argc, $argv),
             'generate-all' => $this->generateAll($argc, $argv),
+            'has-built' => $this->hasBuilt($argc, $argv),
             'tag' => $this->tag($argc, $argv),
 
             default => $this->notACommand($userCommand),
@@ -106,7 +110,51 @@ final class App
         $map = ContainerFileMap::parseDefinitions(
             ContainerFileDefinitions::get()
         );
+
         $semver = SemVer::parseLax($appVersion);
+        if ($semver === null) {
+            errorln('Cannot parse the specified version string `', $appVersion, '`.');
+            return 1;
+        }
+
+        $baseImage = BaseImage::resolve($baseImageAlias);
+
+        $containerBuilder = new ContainerBuilder(new ContainerEngine(), $map);
+        $buildStatus = $containerBuilder->build($appName, $semver, $baseImage);
+
+        if ($buildStatus === ContainerBuilderStatus::Preexists) {
+            writeln('Nothing to do.');
+        } elseif ($buildStatus === ContainerBuilderStatus::Built) {
+            writeln('Done.');
+        }
+
+        return 0;
+    }
+
+    private function canBuild(int $argc, array $argv): int
+    {
+        $argsOk = $this->readArgsAppNameVersionBaseimage(
+            $argc,
+            $argv,
+            'can-build',
+            $appName,
+            $appVersion,
+            $baseImageAlias
+        );
+
+        if (!$argsOk) {
+            return 1;
+        }
+
+        $map = ContainerFileMap::parseDefinitions(
+            ContainerFileDefinitions::get()
+        );
+
+        $semver = SemVer::parseLax($appVersion);
+        if ($semver === null) {
+            errorln('Cannot parse the specified version string `', $appVersion, '`.');
+            return 1;
+        }
 
         $recipe = $map->get($appName, $semver);
         if ($recipe === null) {
@@ -114,25 +162,7 @@ final class App
             return 1;
         }
 
-        writeln('Found `', $recipe->app, ':', $recipe->version, '`.');
-        foreach ($recipe->dependencies as $dependency) {
-            writeln('Depends on: ', $dependency);
-        }
-
-        if (count($recipe->dependencies) > 0) {
-            // TODO
-            errorln('Dependency resolution is not implemented yet.');
-            return 1;
-        }
-
-        $baseImage = BaseImage::resolve($baseImageAlias);
-        $containerFilePath = ContainerFile::getContainerFileTargetPath($recipe->app, $recipe->version, $baseImage);
-        $tag = ContainerTag::makeFromRecipe($recipe, $baseImage);
-
-        $engine = new ContainerEngine();
-        $engine->build($containerFilePath, $tag);
-
-        writeln('Done.');
+        outputln($recipe->app, ':', $recipe->version);
 
         return 0;
     }
@@ -177,7 +207,7 @@ final class App
     {
         if ($argc > 3) {
             errorln('Too many arguments.');
-            usageln($argv[0], 'generateall [<base-image>]');
+            usageln($argv[0], 'generate-all [<base-image>]');
             return 1;
         }
 
@@ -199,6 +229,47 @@ final class App
         }
 
         return ($error) ? 1 : 0;
+    }
+
+    private function hasBuilt(int $argc, array $argv): int
+    {
+        $argsOk = $this->readArgsAppNameVersionBaseimage(
+            $argc,
+            $argv,
+            'has-built',
+            $appName,
+            $appVersion,
+            $baseImageAlias
+        );
+
+        if (!$argsOk) {
+            return 1;
+        }
+
+        $map = ContainerFileMap::parseDefinitions(
+            ContainerFileDefinitions::get()
+        );
+
+        $semver = SemVer::parseLax($appVersion);
+        if ($semver === null) {
+            errorln('Cannot parse the specified version string `', $appVersion, '`.');
+            return 1;
+        }
+
+        $baseImage = BaseImage::resolve($baseImageAlias);
+        $tagver = ContainerVersionTag::fromSemVer($semver, $baseImage->alias);
+
+        $containerEngine = new ContainerEngine();
+        $containerBuilder = new ContainerBuilder($containerEngine, $map);
+        $image = $containerBuilder->hasBuilt($appName, $tagver);
+
+        if ($image === null) {
+            return 1;
+        }
+
+        outputln($image);
+
+        return 0;
     }
 
     private function tag(int $argc, array $argv): int

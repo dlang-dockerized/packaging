@@ -6,7 +6,7 @@ namespace DlangDockerized\Ddct\Util;
 
 use DlangDockerized\Ddct\Datatype\AAWrapper;
 use DlangDockerized\Ddct\Datatype\ContainerImage;
-use DlangDockerized\Ddct\Datatype\SemVer;
+use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
 
 class Tagger
 {
@@ -64,7 +64,7 @@ class Tagger
                 continue;
             }
 
-            $version = SemVer::parse($image->tag);
+            $version = ContainerVersionTag::parseLax($image->tag);
             if (($version === null) || ($version->preRelease === null)) {
                 continue;
             }
@@ -74,8 +74,8 @@ class Tagger
 
         $tree = $tree->getArray();
         foreach ($tree as &$appVersionList) {
-            usort($appVersionList, function (SemVer $a, SemVer $b) {
-                return SemVer::compare($b, $a);
+            usort($appVersionList, function (ContainerVersionTag $a, ContainerVersionTag $b) {
+                $b->compareTo($a);
             });
         }
         unset($appVersionList);

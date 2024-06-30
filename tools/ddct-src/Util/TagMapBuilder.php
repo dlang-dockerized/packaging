@@ -6,7 +6,7 @@ namespace DlangDockerized\Ddct\Util;
 
 use DlangDockerized\Ddct\Datatype\AAWrapper;
 use DlangDockerized\Ddct\Datatype\BaseImage;
-use DlangDockerized\Ddct\Datatype\SemVer;
+use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
 use LogicException;
 
 final class TagMapBuilder
@@ -37,7 +37,7 @@ final class TagMapBuilder
         $this->firstInRepository = true;
     }
 
-    public function add(SemVer $version): void
+    public function add(ContainerVersionTag $version): void
     {
         if ($this->repository === null) {
             throw new LogicException('`nextRepository()` must be called before `add()`.');
@@ -47,33 +47,33 @@ final class TagMapBuilder
 
         if ($this->firstInRepository) {
             $this->firstInRepository = false;
-            $this->pushString($source, $version->preRelease, 'latest');
+            $this->pushString($source, $version->baseImageAlias, 'latest');
         }
 
         if ($version->major < $this->previousMajor) {
             $this->previousMajor = $version->major;
             $this->previousMinor = PHP_INT_MAX;
 
-            $this->push($source, $version->preRelease, $version, 1);
+            $this->push($source, $version->baseImageAlias, $version, 1);
         }
 
         if ($version->minor < $this->previousMinor) {
             $this->previousMinor = $version->minor;
-            $this->push($source, $version->preRelease, $version, 2);
+            $this->push($source, $version->baseImageAlias, $version, 2);
         }
 
-        $this->push($source, $version->preRelease, $version, 3);
+        $this->push($source, $version->baseImageAlias, $version, 3);
     }
 
-    private function push(string $source, string $baseImageAlias, SemVer $semver, int $depth): void
+    private function push(string $source, string $baseImageAlias, ContainerVersionTag $version, int $depth): void
     {
-        $version = match ($depth) {
-            1 => (string)$semver->major,
-            2 => $semver->major . '.' . $semver->minor,
-            3 => $semver->major . '.' . $semver->minor . '.' . $semver->patch,
+        $versionString = match ($depth) {
+            1 => (string)$version->major,
+            2 => $version->major . '.' . $version->minor,
+            3 => $version->toString(false),
         };
 
-        $this->pushString($source, $baseImageAlias, $version);
+        $this->pushString($source, $baseImageAlias, $versionString);
     }
 
     private function pushString(string $source, string $baseImageAlias, string $version): void

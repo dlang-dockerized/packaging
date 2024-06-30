@@ -53,6 +53,27 @@ final class ContainerImage
         return $this->repoName;
     }
 
+    public function parseVersionTag(): ?ContainerVersionTag
+    {
+        return ContainerVersionTag::parseLax($this->tag);
+    }
+
+    public function __toString(): string
+    {
+        if ($this->id !== null) {
+            return $this->id;
+        }
+
+        if (
+            ($this->repository !== null)
+            && ($this->tag !== null)
+        ) {
+            return $this->repository . ':' . $this->tag;
+        }
+
+        return '';
+    }
+
     public static function fromAA(array $aa): self
     {
         return new self(
