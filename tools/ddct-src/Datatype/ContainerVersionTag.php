@@ -58,12 +58,35 @@ final class ContainerVersionTag
         );
     }
 
-    public static function parseLax(string $input): ?self
+    public static function parse(string $input): ?self
     {
-        if (str_starts_with($input, 'v')) {
-            $input = substr($input, 1);
+        $match = preg_match(
+            '/^(?P<major>0|[1-9]\d*)'
+            . '\.(?P<minor>0|[1-9]\d*)'
+            . '\.(?P<patch>0|[1-9]\d*)'
+            . '(?:_(?P<prerelease>(?:0|[1-9]\d*|\d*[a-zA-Z_][0-9a-zA-Z_]*)'
+            . '(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z_][0-9a-zA-Z_]*))*))?'
+            . '(?:-(?P<baseimagealias>[0-9a-zA-Z_-]+(?:\.[0-9a-zA-Z_-]+)*))?$/',
+            $input,
+            $matches,
+            PREG_UNMATCHED_AS_NULL,
+        );
+
+        if (($match === false) || ($match === 0)) {
+            return null;
         }
 
+        return new self(
+            (int)$matches['major'],
+            (int)$matches['minor'],
+            (int)$matches['patch'],
+            $matches['prerelease'] ?? null,
+            $matches['baseimagealias'] ?? null,
+        );
+    }
+
+    public static function parseLax(string $input): ?self
+    {
         $match = preg_match(
             '/^(?P<major>\d*)'
             . '(?:\.(?P<minor>[\d*]*))?'
@@ -72,6 +95,7 @@ final class ContainerVersionTag
             . '(?:-(?P<baseimagealias>[0-9a-zA-Z-_.]+))?$/',
             $input,
             $matches,
+            PREG_UNMATCHED_AS_NULL,
         );
 
         if (($match === false) || ($match === 0)) {
@@ -82,13 +106,12 @@ final class ContainerVersionTag
         $minor = ($minor === null) ? null : (($minor !== '*') ? (int)$minor : null);
         $patch = $matches['patch'] ?? null;
         $patch = ($patch === null) ? null : (($patch !== '*') ? (int)$patch : null);
-        $preRelease = empty($matches['prerelease']) ? null : $matches['prerelease'];
 
         return new self(
             (int)$matches['major'],
             $minor,
             $patch,
-            $preRelease,
+            $matches['prerelease'] ?? null,
             $matches['baseimagealias'] ?? null,
         );
     }

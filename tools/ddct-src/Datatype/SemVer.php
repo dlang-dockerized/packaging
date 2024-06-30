@@ -51,6 +51,7 @@ final class SemVer implements Stringable
             . '(?:\+(?P<buildmetadata>[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/',
             $input,
             $matches,
+            PREG_UNMATCHED_AS_NULL,
         );
 
         if (($match === false) || ($match === 0)) {
@@ -80,6 +81,7 @@ final class SemVer implements Stringable
             . '(?:\+(?P<buildmetadata>[0-9a-zA-Z-.]+))?$/',
             $input,
             $matches,
+            PREG_UNMATCHED_AS_NULL,
         );
 
         if (($match === false) || ($match === 0)) {
