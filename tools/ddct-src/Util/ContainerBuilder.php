@@ -18,6 +18,7 @@ final class ContainerBuilder
     public function __construct(
         private readonly ContainerEngine $containerEngine,
         private readonly ContainerFileMap $map,
+        private readonly Tagger $tagger,
     ) {
     }
 
@@ -46,8 +47,13 @@ final class ContainerBuilder
             return ContainerBuilderStatus::Preexists;
         }
 
-        writeln('Build container `', $recipe->app, ':', $tagVer, '`.');
-        return $this->buildContainerImpl($recipe, $baseImage);
+        writeln('Building container `', $recipe->app, ':', $tagVer, '`.');
+        $result = $this->buildContainerImpl($recipe, $baseImage);
+
+        write('Updating tags.');
+        $this->tagger->applyAll();
+
+        return $result;
     }
 
     public function buildByRecipe(ContainerFileRecipe $recipe, BaseImage $baseImage): ContainerBuilderStatus
