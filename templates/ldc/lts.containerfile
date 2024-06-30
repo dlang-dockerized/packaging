@@ -72,7 +72,7 @@ FROM docker.io/debian:bookworm AS export-stage
 
 ENV LDC_BOOT_IMAGE={{ $LDC_BOOT_IMAGE }}
 COPY ./scripts/prepare-runtime-environment.sh .
-RUN ./prepare-runtime-environment.sh && rm ./scripts/prepare-runtime-environment.sh
+RUN ./prepare-runtime-environment.sh && rm ./prepare-runtime-environment.sh
 
 COPY --from=build-stage /opt/ldc /opt/ldc
 
