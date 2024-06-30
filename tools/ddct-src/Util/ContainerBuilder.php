@@ -50,7 +50,7 @@ final class ContainerBuilder
         writeln('Building container `', $recipe->app, ':', $tagVer, '`.');
         $result = $this->buildContainerImpl($recipe, $baseImage);
 
-        write('Updating tags.');
+        writeln('Updating tags.');
         $this->tagger->applyAll();
 
         return $result;
