@@ -119,7 +119,9 @@ final class App
 
         $baseImage = BaseImage::resolve($baseImageAlias);
 
-        $containerBuilder = new ContainerBuilder(new ContainerEngine(), $map);
+        $containerEngine = new ContainerEngine();
+        $tagger = new Tagger($containerEngine);
+        $containerBuilder = new ContainerBuilder($containerEngine, $map, $tagger);
         $buildStatus = $containerBuilder->build($appName, $semver, $baseImage);
 
         if ($buildStatus === ContainerBuilderStatus::Preexists) {
@@ -260,7 +262,8 @@ final class App
         $tagver = ContainerVersionTag::fromSemVer($semver, $baseImage->alias);
 
         $containerEngine = new ContainerEngine();
-        $containerBuilder = new ContainerBuilder($containerEngine, $map);
+        $tagger = new Tagger($containerEngine);
+        $containerBuilder = new ContainerBuilder($containerEngine, $map, $tagger);
         $image = $containerBuilder->hasBuilt($appName, $tagver);
 
         if ($image === null) {
