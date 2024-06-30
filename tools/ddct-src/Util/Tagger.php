@@ -75,7 +75,7 @@ class Tagger
         $tree = $tree->getArray();
         foreach ($tree as &$appVersionList) {
             usort($appVersionList, function (ContainerVersionTag $a, ContainerVersionTag $b) {
-                $b->compareTo($a);
+                return $b->compareTo($a);
             });
         }
         unset($appVersionList);
