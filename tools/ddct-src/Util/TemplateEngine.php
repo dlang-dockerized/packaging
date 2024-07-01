@@ -50,6 +50,17 @@ final class TemplateEngine
                 break;
             }
 
+            // trim indentation
+            $nTabs = 0;
+            foreach (str_split($line) as $char) {
+                if ($char != self::tab) {
+                    break;
+                }
+                ++$nTabs;
+            }
+            $indentationToTrim = min($nTabs, $nestingLevel);
+            $line = substr($line, $indentationToTrim);
+
             $isFunction = str_starts_with($line, self::tplOpenTag);
             if ($isFunction) {
                 $isEndingTag = str_starts_with($line, self::tplOpenEnd);
@@ -82,17 +93,6 @@ final class TemplateEngine
                 $result .= self::phpIncludeCloseTag;
                 continue;
             }
-
-            // trim indentation
-            $nTabs = 0;
-            foreach (str_split($line) as $char) {
-                if ($char != self::tab) {
-                    break;
-                }
-                ++$nTabs;
-            }
-            $indentationToTrim = min($nTabs, $nestingLevel);
-            $line = substr($line, $indentationToTrim);
 
             // variables
             $line = str_replace(self::tplPrintTag, self::phpPrintTag, $line);
