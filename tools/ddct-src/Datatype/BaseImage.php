@@ -9,27 +9,27 @@ use Exception;
 
 final class BaseImage
 {
+    private static ?array $definitions = null;
+
     public function __construct(
         public readonly string $alias,
         public readonly string $image,
+        public readonly array $env = [],
     ) {
     }
 
-    public static function loadDefinitions(): array
+    private static function getDefinitions(): array
     {
-        $ini = IniLoader::load(Path::baseImageDefinitionsFile);
-
-        if (!isset($ini['base_images'])) {
-            writeln('Warning: Using empty base-image definition file `', Path::baseImageDefinitionsFile, '`.');
-            return [];
+        if (self::$definitions === null) {
+            self::$definitions = IniLoader::load(Path::baseImageDefinitionsFile);
         }
 
-        return $ini['base_images'];
+        return self::$definitions;
     }
 
     public static function resolve(string $alias): BaseImage
     {
-        $defs = self::loadDefinitions();
+        $defs = self::getDefinitions();
         return self::resolveImpl($defs, $alias);
     }
 
@@ -42,10 +42,15 @@ final class BaseImage
         $resolved = $baseImages[$alias];
 
         // resolve aliases
-        if (str_starts_with($resolved, 'alias:')) {
-            return self::resolveImpl($baseImages, substr($resolved, 6));
+        if (isset($resolved['alias'])) {
+            return self::resolveImpl($baseImages, $resolved['alias']);
         }
 
-        return new BaseImage($alias, $resolved);
+        if (!isset($resolved['image'])) {
+            throw new Exception('Invalid base-image definition `' . $alias . '` specifies neither `image` nor `alias`.');
+        }
+
+        $env = (isset($resolved['env'])) ? $resolved['env'] : [];
+        return new BaseImage($alias, $resolved['image'], $env);
     }
 }

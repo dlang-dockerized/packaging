@@ -81,7 +81,7 @@ class ContainerFile
             mkdir($containerFileDir, 0o755, true);
         }
 
-        $tplVars = $recipe->env;
+        $tplVars = array_merge($recipe->env, $baseImage->env);
         $tplVars['BASE_IMAGE'] = $baseImage->image;
         $tplVars['BASE_IMAGE_ALIAS'] = $baseImage->alias;
 
