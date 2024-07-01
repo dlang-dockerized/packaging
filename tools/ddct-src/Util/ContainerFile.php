@@ -7,14 +7,24 @@ namespace DlangDockerized\Ddct\Util;
 use DlangDockerized\Ddct\Datatype\AAWrapper;
 use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileRecipe;
-
 use DlangDockerized\Ddct\Path;
 use Exception;
 
 class ContainerFile
 {
+    private static ?TemplateEngine $templateEngine = null;
+
     private function __construct()
     {
+    }
+
+    private static function getTemplateEngine(): TemplateEngine
+    {
+        if (self::$templateEngine === null) {
+            self::$templateEngine = new TemplateEngine(Path::templatesDir);
+        }
+
+        return self::$templateEngine;
     }
 
     public static function parseKey(string $key): array|bool
@@ -63,9 +73,6 @@ class ContainerFile
         $baseImage = BaseImage::resolve($baseImageAlias);
         $recipe = self::loadRecipe($appName, $appVersion);
 
-        $tplPath = Path::templatesDir . '/' . $recipe->template;
-        $tpl = BashTpl::compile($tplPath);
-
         $containerFileDir = self::getContainerFileTargetDir($appName, $appVersion, $baseImage);
         $containerFilePath = $containerFileDir . '/Containerfile';
 
@@ -78,7 +85,8 @@ class ContainerFile
         $tplVars['BASE_IMAGE'] = $baseImage->image;
         $tplVars['BASE_IMAGE_ALIAS'] = $baseImage->alias;
 
-        BashTpl::executeToFile($tpl, $tplVars, $containerFilePath);
+        $templateEngine = self::getTemplateEngine();
+        $templateEngine->executeToFile($recipe->template, $tplVars, $containerFilePath);
         return $containerFilePath;
     }
 }

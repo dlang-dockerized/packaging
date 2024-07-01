@@ -8,7 +8,6 @@ use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileMap;
 use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
 use DlangDockerized\Ddct\Datatype\SemVer;
-use DlangDockerized\Ddct\Util\BashTplException;
 use DlangDockerized\Ddct\Util\ContainerBuilder;
 use DlangDockerized\Ddct\Util\ContainerBuilderStatus;
 use DlangDockerized\Ddct\Util\ContainerEngine;
@@ -23,10 +22,6 @@ final class App
     {
         try {
             return $this->runCommand($argc, $argv);
-        } catch (BashTplException $ex) {
-            errorln($ex->getMessage());
-            writeln($ex->details);
-            return 1;
         } catch (Exception $ex) {
             errorln($ex->getMessage());
             return 1;

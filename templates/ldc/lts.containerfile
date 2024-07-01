@@ -3,9 +3,9 @@
 ###################
 
 FROM dlang-dockerized/{{ $LLVM_IMAGE }}-{{ $BASE_IMAGE_ALIAS }} AS llvm-imported
-% if [ -n "$LDC_BOOT_IMAGE" ]; then
+{{# if (isset($LDC_BOOT_IMAGE)): }}
 	FROM dlang-dockerized/{{ $LDC_BOOT_IMAGE }}-{{ $BASE_IMAGE_ALIAS }} AS ldc-bootstrap-imported
-% fi
+{{# endif }}
 
 ###############
 # build stage #
@@ -26,11 +26,11 @@ RUN ./install-ldc-build-deps.sh
 # Copy prebuilt LLVM from dlang-dockerized/llvm
 COPY --from=llvm-imported /opt/llvm/ /opt/llvm/
 
-% if [ -n "$LDC_BOOT_IMAGE" ]; then
+{{# if (isset($LDC_BOOT_IMAGE)): }}
 	# Copy prebuilt LDC from dlang-dockerized/ldc
 	COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc-bootstrap/
 	RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.conf
-% fi
+{{# endif }}
 
 # Download, build and install LDC
 
@@ -42,18 +42,18 @@ COPY ./scripts/download-ldc-source.sh .
 RUN ./download-ldc-source.sh
 
 COPY ./scripts/build-ldc.sh .
-% if [ -n "$LDC_BOOT_IMAGE" ]; then
+{{# if (isset($LDC_BOOT_IMAGE)): }}
 	RUN DMD=/opt/ldc-bootstrap/bin/ldmd2 ./build-ldc.sh
-% else
+{{# else: }}
 	RUN ./build-ldc.sh
-% fi
+{{# endif }}
 
 # Self-test
 COPY ./resources/helloworld.d /opt/helloworld.d
 RUN /opt/ldc/bin/ldmd2 -run /opt/helloworld.d
 RUN rm /opt/helloworld.d
 
-% if [ -n "$DL_DUB_TAG" ]; then
+{{# if (isset($DL_DUB_TAG)): }}
 	# Download, build and install DUB
 	ENV DL_DUB_TAG={{ $DL_DUB_TAG }}
 
@@ -62,7 +62,7 @@ RUN rm /opt/helloworld.d
 
 	COPY ./scripts/build-dub.sh .
 	RUN DMD=/opt/ldc/bin/ldmd2 ./build-dub.sh
-% fi
+{{# endif }}
 
 ################
 # export stage #
@@ -70,7 +70,9 @@ RUN rm /opt/helloworld.d
 
 FROM docker.io/debian:bookworm AS export-stage
 
-ENV LDC_BOOT_IMAGE={{ $LDC_BOOT_IMAGE }}
+{{# if (isset($LDC_BOOT_IMAGE)): }}
+	ENV LDC_BOOT_IMAGE={{ $LDC_BOOT_IMAGE }}
+{{# endif }}
 COPY ./scripts/prepare-runtime-environment.sh .
 RUN ./prepare-runtime-environment.sh && rm ./prepare-runtime-environment.sh
 
@@ -81,9 +83,9 @@ COPY ./resources/helloworld.d /opt/helloworld.d
 RUN /opt/ldc/bin/ldmd2 -run /opt/helloworld.d
 RUN rm /opt/helloworld.d
 
-% if [ -n "$DL_DUB_TAG" ]; then
+{{# if (isset($DL_DUB_TAG)): }}
 	COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
-% fi
+{{# endif }}
 
 COPY ./scripts/entrypoint-ldc.sh /usr/bin/entrypoint
 
