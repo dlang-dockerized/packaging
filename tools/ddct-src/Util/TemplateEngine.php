@@ -14,9 +14,12 @@ final class TemplateEngine
     private const tplCloseTagLF = " }}\n";
     private const tplOpenEnd = '{{ end';
     private const phpOpenFull = '<?php ';
+    private const tplIncludeTag = '{{< ';
     private const phpPrintTag = '<?= ';
     private const phpCloseTagLF = " ?>\n\n";
     private const phpCloseTag = " ?>\n";
+    private const phpIncludeOpenTag = '<?php eval($_te->getCompiledTemplate(\'';
+    private const phpIncludeCloseTag = '\'))?>';
     private const tab = "\t";
 
     private array $cache = [];
@@ -47,8 +50,8 @@ final class TemplateEngine
                 break;
             }
 
-            $isPhpLine = str_starts_with($line, self::tplOpenTag);
-            if ($isPhpLine) {
+            $isFunction = str_starts_with($line, self::tplOpenTag);
+            if ($isFunction) {
                 $isEndingTag = str_starts_with($line, self::tplOpenEnd);
 
                 if ($isEndingTag) {
@@ -65,6 +68,18 @@ final class TemplateEngine
                 $result .= $line;
                 $result .= self::phpCloseTag;
 
+                continue;
+            }
+
+            $isInclude = str_starts_with($line, self::tplIncludeTag);
+            if ($isInclude) {
+                $result .= self::phpIncludeOpenTag;
+                $lineLength = strlen($line);
+                // 8 = "{{< " . " }}\n"
+                $line = substr($line, 4, ($lineLength - 8));
+                unset($lineLength);
+                $result .= $line;
+                $result .= self::phpIncludeCloseTag;
                 continue;
             }
 
@@ -100,6 +115,12 @@ final class TemplateEngine
         $this->compile($templateName);
     }
 
+    public function getCompiledTemplate(string $templateName): string
+    {
+        $this->compileIfNotInCache($templateName);
+        return $this->cache[$templateName];
+    }
+
     public function executeToFile(string $templateName, array $variables, string $outputFile): void
     {
         if (!ob_start()) {
@@ -130,12 +151,13 @@ final class TemplateEngine
     {
         $this->compileIfNotInCache($templateName);
 
-        (function (string $_tplCode, array $_variables) {
+        (function (TemplateEngine $_te, string $_tplCode, array $_variables) {
             foreach ($_variables as $_name => $_value) {
                 $$_name = $_value;
             }
             eval($_tplCode);
         })(
+            $this,
             $this->cache[$templateName],
             $variables,
         );
