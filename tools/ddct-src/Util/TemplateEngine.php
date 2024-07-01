@@ -127,15 +127,17 @@ final class TemplateEngine
             throw new Exception('Could not start output-buffering.');
         }
 
-        $this->execute($templateName, $variables);
+        try {
+            $this->execute($templateName, $variables);
 
-        $written = file_put_contents($outputFile, ob_get_contents(), LOCK_EX);
-        if ($written === false) {
-            throw new Exception('Failed to write template file.');
-        }
-
-        if (!ob_end_clean()) {
-            throw new Exception('Could not end output-buffering.');
+            $written = file_put_contents($outputFile, ob_get_contents(), LOCK_EX);
+            if ($written === false) {
+                throw new Exception('Failed to write template file.');
+            }
+        } finally {
+            if (!ob_end_clean()) {
+                throw new Exception('Could not end output-buffering.');
+            }
         }
     }
 
