@@ -48,9 +48,14 @@ final class ContainerBuilder
         }
 
         writeln('Building container `', $recipe->app, ':', $tagVer, '`.');
+        writeln('--> Generating Containerfile.');
+        $savedAs = ContainerFile::generateFile($recipe->app, $recipe->version, $baseImage->alias);
+        writeln('--> `', $savedAs, '`');
+
+        writeln('--> Building image.');
         $result = $this->buildContainerImpl($recipe, $baseImage);
 
-        writeln('Updating tags.');
+        writeln('--> Updating tags.');
         $this->tagger->applyAll();
 
         return $result;
