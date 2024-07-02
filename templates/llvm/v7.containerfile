@@ -8,8 +8,7 @@ WORKDIR /opt/build
 
 # Install dependencies
 
-COPY ./scripts/install-common-system-tools.sh .
-RUN ./install-common-system-tools.sh
+{{< common/install-common-system-tools.containerfile }}
 
 COPY ./scripts/install-llvm-build-deps.sh .
 RUN ./install-llvm-build-deps.sh

@@ -17,8 +17,7 @@ WORKDIR /opt/build
 
 # Install dependencies
 
-COPY ./scripts/install-common-system-tools.sh .
-RUN ./install-common-system-tools.sh
+{{< common/install-common-system-tools.containerfile }}
 
 COPY ./scripts/install-ldc-build-deps.sh .
 RUN ./install-ldc-build-deps.sh
@@ -73,8 +72,7 @@ FROM docker.io/debian:bookworm AS export-stage
 {{# if (isset($LDC_BOOT_IMAGE)): }}
 	ENV LDC_BOOT_IMAGE={{ $LDC_BOOT_IMAGE }}
 {{# endif }}
-COPY ./scripts/prepare-runtime-environment.sh .
-RUN ./prepare-runtime-environment.sh && rm ./prepare-runtime-environment.sh
+{{< common/prepare-runtime-environment.containerfile }}
 
 COPY --from=build-stage /opt/ldc /opt/ldc
 
