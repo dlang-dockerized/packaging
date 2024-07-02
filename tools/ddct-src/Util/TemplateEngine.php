@@ -12,7 +12,7 @@ final class TemplateEngine
     private const tplPrintTag = '{{ ';
     private const tplCloseTag = ' }}';
     private const tplCloseTagLF = " }}\n";
-    private const tplOpenEnd = '{{ end';
+    private const tplOpenEnd = '{{# end';
     private const phpOpenFull = '<?php ';
     private const tplIncludeTag = '{{< ';
     private const phpPrintTag = '<?= ';
@@ -39,8 +39,9 @@ final class TemplateEngine
 
         $result = '?>';
 
-        $nestingLevel = 0;
+        $nesting = [];
         while (true) {
+            $nestingLevel = count($nesting);
             $line = fgets($f);
 
             if ($line === false) {
@@ -61,20 +62,24 @@ final class TemplateEngine
             $indentationToTrim = min($nTabs, $nestingLevel);
             $line = substr($line, $indentationToTrim);
 
-            $isFunction = str_starts_with($line, self::tplOpenTag);
+            $lineTrimmed = ltrim($line);
+
+            $isFunction = str_starts_with($lineTrimmed, self::tplOpenTag);
             if ($isFunction) {
-                $isEndingTag = str_starts_with($line, self::tplOpenEnd);
+                $isEndingTag = str_starts_with($lineTrimmed, self::tplOpenEnd);
 
                 if ($isEndingTag) {
-                    --$nestingLevel;
+                    array_pop($nesting);
                 } else {
-                    ++$nestingLevel;
+                    if (end($nesting) !== $nTabs) {
+                        $nesting[] = $nTabs;
+                    }
                 }
 
                 $result .= self::phpOpenFull;
-                $lineLength = strlen($line);
+                $lineLength = strlen($lineTrimmed);
                 // 8 = "{{# " . " }}\n"
-                $line = substr($line, 4, ($lineLength - 8));
+                $line = substr($lineTrimmed, 4, ($lineLength - 8));
                 unset($lineLength);
                 $result .= $line;
                 $result .= self::phpCloseTag;
@@ -82,7 +87,7 @@ final class TemplateEngine
                 continue;
             }
 
-            $isInclude = str_starts_with($line, self::tplIncludeTag);
+            $isInclude = str_starts_with($lineTrimmed, self::tplIncludeTag);
             if ($isInclude) {
                 $result .= self::phpIncludeOpenTag;
                 $lineLength = strlen($line);
@@ -113,6 +118,10 @@ final class TemplateEngine
         }
 
         $this->compile($templateName);
+        /*file_put_contents(
+            $this->makeTemplatePath($templateName) . '.compiled',
+            $this->cache[$templateName]
+        );*/
     }
 
     public function getCompiledTemplate(string $templateName): string
@@ -123,12 +132,14 @@ final class TemplateEngine
 
     public function executeToFile(string $templateName, array $variables, string $outputFile): void
     {
+        $this->compileIfNotInCache($templateName);
+
         if (!ob_start()) {
             throw new Exception('Could not start output-buffering.');
         }
 
         try {
-            $this->execute($templateName, $variables);
+            $this->executeTemplate($templateName, $variables);
 
             $written = file_put_contents($outputFile, ob_get_contents(), LOCK_EX);
             if ($written === false) {
@@ -143,16 +154,12 @@ final class TemplateEngine
 
     public function execute(string $templateName, array $variables): void
     {
-        $this->executeTemplate(
-            $templateName,
-            $variables,
-        );
+        $this->compileIfNotInCache($templateName);
+        $this->executeTemplate($templateName, $variables);
     }
 
     private function executeTemplate(string $templateName, array $variables)
     {
-        $this->compileIfNotInCache($templateName);
-
         (function (TemplateEngine $_te, string $_tplCode, array $_variables) {
             foreach ($_variables as $_name => $_value) {
                 $$_name = $_value;
