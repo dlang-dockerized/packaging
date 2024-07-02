@@ -14,7 +14,7 @@ WORKDIR /opt/build
 
 # Install dependencies
 
-COPY ./scripts/install-common-system-tools.sh .
+COPY ./templates/scripts/install-common-system-tools.sh .
 RUN ./install-common-system-tools.sh
 
 # Copy prebuilt LDC from dlang/ldc
@@ -25,10 +25,10 @@ RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.con
 
 ENV DL_DMD_TAG v2.105.0
 
-COPY ./scripts/download-dmd-source.sh .
+COPY ./templates/scripts/download-dmd-source.sh .
 RUN ./download-dmd-source.sh
 
-COPY ./scripts/build-dmd.sh .
+COPY ./templates/scripts/build-dmd.sh .
 RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/bin/dmd && \
     ./build-dmd.sh && \
     rm -f /usr/bin/dmd
@@ -37,10 +37,10 @@ RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/bin/dmd && \
 
 ENV DL_DUB_TAG v1.34.0
 
-COPY ./scripts/download-dub-source.sh .
+COPY ./templates/scripts/download-dub-source.sh .
 RUN ./download-dub-source.sh
 
-COPY ./scripts/build-dub.sh .
+COPY ./templates/scripts/build-dub.sh .
 RUN DMD=/opt/build/dmd/generated/linux/release/64/dmd ./build-dub.sh
 
 ################
@@ -57,7 +57,7 @@ COPY --from=build-stage /opt/build/phobos/std /usr/include/dmd/phobos/std
 COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
 COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
 COPY ./resources/dmd.conf /etc/dmd.conf
-COPY ./scripts/entrypoint-dmd.sh /usr/bin/entrypoint
+COPY ./templates/scripts/entrypoint-dmd.sh /usr/bin/entrypoint
 
 # Self-test
 COPY ./resources/helloworld.d /opt/helloworld.d

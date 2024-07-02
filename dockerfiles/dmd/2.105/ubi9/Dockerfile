@@ -8,33 +8,33 @@ WORKDIR /opt/build
 
 # Install dependencies
 
-COPY ./scripts/install-common-system-tools.sh .
+COPY ./templates/scripts/install-common-system-tools.sh .
 RUN ./install-common-system-tools.sh
 
-COPY ./scripts/install-dmd-build-deps.sh .
+COPY ./templates/scripts/install-dmd-build-deps.sh .
 RUN ./install-dmd-build-deps.sh
 
-COPY ./scripts/install-prebuilt-ldc.sh .
+COPY ./templates/scripts/install-prebuilt-ldc.sh .
 RUN ./install-prebuilt-ldc.sh # TODO: replace with /opt/ldc from dlang/ldc:latest-ubi9
 
 # Download, build and install DMD
 
 ENV DL_DMD_TAG v2.105.0
 
-COPY ./scripts/download-dmd-source.sh .
+COPY ./templates/scripts/download-dmd-source.sh .
 RUN ./download-dmd-source.sh
 
-COPY ./scripts/build-dmd.sh .
+COPY ./templates/scripts/build-dmd.sh .
 RUN ./build-dmd.sh
 
 # Download, build and install DUB
 
 ENV DL_DUB_TAG v1.34.0
 
-COPY ./scripts/download-dub-source.sh .
+COPY ./templates/scripts/download-dub-source.sh .
 RUN ./download-dub-source.sh
 
-COPY ./scripts/build-dub.sh .
+COPY ./templates/scripts/build-dub.sh .
 RUN DMD=/opt/build/dmd/generated/linux/release/64/dmd ./build-dub.sh
 
 ################
@@ -52,7 +52,7 @@ COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
 COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
 COPY ./resources/dmd.conf /etc/dmd.conf
 COPY ./resources/helloworld.d /opt/helloworld.d
-COPY ./scripts/entrypoint-dmd.sh /usr/bin/entrypoint
+COPY ./templates/scripts/entrypoint-dmd.sh /usr/bin/entrypoint
 
 # Self-test
 COPY ./resources/helloworld.d /opt/helloworld.d

@@ -10,7 +10,7 @@ WORKDIR /opt/build
 
 {{< common/install-common-system-tools.containerfile }}
 
-COPY ./scripts/install-llvm-build-deps.sh .
+COPY ./templates/scripts/install-llvm-build-deps.sh .
 RUN ./install-llvm-build-deps.sh
 
 # Download, build and install LLVM
@@ -18,10 +18,10 @@ RUN ./install-llvm-build-deps.sh
 ENV DL_LLVM_TAG={{ $DL_LLVM_TAG }}
 ENV LLVM_SEMVER_MAJOR={{ $LLVM_SEMVER_MAJOR }}
 
-COPY ./scripts/download-llvm-source.sh .
+COPY ./templates/scripts/download-llvm-source.sh .
 RUN ./download-llvm-source.sh
 
-COPY ./scripts/build-llvm.sh .
+COPY ./templates/scripts/build-llvm.sh .
 RUN ./build-llvm.sh
 
 ################

@@ -19,7 +19,7 @@ WORKDIR /opt/build
 
 {{< common/install-common-system-tools.containerfile }}
 
-COPY ./scripts/install-ldc-build-deps.sh .
+COPY ./templates/scripts/install-ldc-build-deps.sh .
 RUN ./install-ldc-build-deps.sh
 
 # Copy prebuilt LLVM from dlang-dockerized/llvm
@@ -37,10 +37,10 @@ ENV DL_LDC_TAG={{ $DL_LDC_TAG }}
 ENV LDC_SEMVER_MAJOR={{ $LDC_SEMVER_MAJOR }}
 ENV LDC_SEMVER_MINOR={{ $LDC_SEMVER_MINOR }}
 
-COPY ./scripts/download-ldc-source.sh .
+COPY ./templates/scripts/download-ldc-source.sh .
 RUN ./download-ldc-source.sh
 
-COPY ./scripts/build-ldc.sh .
+COPY ./templates/scripts/build-ldc.sh .
 {{# if (isset($LDC_BOOT_IMAGE)): }}
 	RUN DMD=/opt/ldc-bootstrap/bin/ldmd2 ./build-ldc.sh
 {{# else: }}
@@ -56,10 +56,10 @@ RUN rm /opt/helloworld.d
 	# Download, build and install DUB
 	ENV DL_DUB_TAG={{ $DL_DUB_TAG }}
 
-	COPY ./scripts/download-dub-source.sh .
+	COPY ./templates/scripts/download-dub-source.sh .
 	RUN ./download-dub-source.sh
 
-	COPY ./scripts/build-dub.sh .
+	COPY ./templates/scripts/build-dub.sh .
 	RUN DMD=/opt/ldc/bin/ldmd2 ./build-dub.sh
 {{# endif }}
 
@@ -85,7 +85,7 @@ RUN rm /opt/helloworld.d
 	COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
 {{# endif }}
 
-COPY ./scripts/entrypoint-ldc.sh /usr/bin/entrypoint
+COPY ./templates/scripts/entrypoint-ldc.sh /usr/bin/entrypoint
 
 ENTRYPOINT [ "/usr/bin/entrypoint" ]
 CMD [ "/opt/ldc/bin/ldc2" ]
