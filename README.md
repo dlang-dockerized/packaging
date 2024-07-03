@@ -15,7 +15,7 @@ docker tag dlang-dockerized/dmd:latest-bookworm dlang-dockerized/dmd:latest
 
 #./ddct build ldc 0.17.6
 #./ddct build ldc 1.20.1
-./ddct build ldc 1.33.0
+./ddct build ldc 1.38.0
 ```
 
 ```

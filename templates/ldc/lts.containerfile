@@ -11,7 +11,7 @@ FROM dlang-dockerized/{{ $LLVM_IMAGE }}-{{ $BASE_IMAGE_ALIAS }} AS llvm-imported
 # build stage #
 ###############
 
-FROM docker.io/debian:bookworm AS build-stage
+FROM {{ $BASE_IMAGE }} AS build-stage
 
 WORKDIR /opt/build
 
@@ -67,7 +67,7 @@ RUN rm /opt/helloworld.d
 # export stage #
 ################
 
-FROM docker.io/debian:bookworm AS export-stage
+FROM {{ $BASE_IMAGE }} AS export-stage
 
 {{# if (isset($LDC_BOOT_IMAGE)): }}
 	ENV LDC_BOOT_IMAGE={{ $LDC_BOOT_IMAGE }}

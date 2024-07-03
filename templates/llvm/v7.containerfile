@@ -18,7 +18,7 @@ WORKDIR /opt/build
 # export stage #
 ################
 
-FROM docker.io/debian:bookworm AS export-stage
+FROM {{ $BASE_IMAGE }} AS export-stage
 
 COPY --from=build-stage /opt/llvm/ /opt/llvm/
 
