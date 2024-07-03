@@ -40,7 +40,9 @@ final class TemplateEngine
         $result = '?>';
 
         $nesting = [];
+        $lineNumber = 0;
         while (true) {
+            ++$lineNumber;
             $nestingLevel = count($nesting);
             $line = fgets($f);
 
@@ -74,6 +76,13 @@ final class TemplateEngine
                     if (end($nesting) !== $nTabs) {
                         $nesting[] = $nTabs;
                     }
+                }
+
+                if (!str_ends_with($lineTrimmed, self::tplCloseTagLF)) {
+                    throw new Exception(
+                        'Bad/missing template function closing tag `}}` in `'
+                        . $templateName . '`:`' . $lineNumber . '`.'
+                    );
                 }
 
                 $result .= self::phpOpenFull;
@@ -118,10 +127,14 @@ final class TemplateEngine
         }
 
         $this->compile($templateName);
-        /*file_put_contents(
-            $this->makeTemplatePath($templateName) . '.compiled',
-            $this->cache[$templateName]
-        );*/
+
+        // Shall write compiled template to file?
+        if (isset($_SERVER['TPL_DEBUG']) && ($_SERVER['TPL_DEBUG'] === 'file')) {
+            file_put_contents(
+                $this->makeTemplatePath($templateName) . '.compiled-tpl.php',
+                $this->cache[$templateName]
+            );
+        }
     }
 
     public function getCompiledTemplate(string $templateName): string
