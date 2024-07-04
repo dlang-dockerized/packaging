@@ -2,54 +2,45 @@
 # imported images #
 ###################
 
-FROM dlang/ldc:latest-bookworm AS ldc-bootstrap-imported
+FROM dlang-dockerized/{{ $LDC_BOOT_IMAGE }}-{{ $BASE_IMAGE_ALIAS }} AS ldc-bootstrap-imported
 
 ###############
 # build stage #
 ###############
 
-FROM docker.io/debian:bookworm AS build-stage
+FROM {{ $BASE_IMAGE }} AS build-stage
 
 WORKDIR /opt/build
 
 # Install dependencies
 
-COPY ./templates/scripts/install-common-system-tools.sh .
-RUN ./install-common-system-tools.sh
+{{< common/install-common-system-tools.containerfile }}
 
-# Copy prebuilt LDC from dlang/ldc
+# Copy prebuilt LDC from dlang-dockerized/ldc
 COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc-bootstrap/
 RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.conf
 
 # Download, build and install DMD
 
-ENV DL_DMD_TAG v2.105.0
+{{< common/download-dmd-source.containerfile }}
+RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/bin/dmd
 
-COPY ./templates/scripts/download-dmd-source.sh .
-RUN ./download-dmd-source.sh
+{{< common/build-dmd.containerfile }}
 
-COPY ./templates/scripts/build-dmd.sh .
-RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/bin/dmd && \
-    ./build-dmd.sh && \
-    rm -f /usr/bin/dmd
-
-# Download, build and install DUB
-
-ENV DL_DUB_TAG v1.34.0
-
-COPY ./templates/scripts/download-dub-source.sh .
-RUN ./download-dub-source.sh
-
-COPY ./templates/scripts/build-dub.sh .
-RUN DMD=/opt/build/dmd/generated/linux/release/64/dmd ./build-dub.sh
+{{# if (isset($DL_DUB_TAG)): }}
+	# Download, build and install DUB
+	{{< common/download-dub-source.containerfile }}
+	{{< common/build-dub.containerfile }}
+{{# endif }}
 
 ################
 # export stage #
 ################
 
-FROM docker.io/debian:bookworm AS export-stage
+FROM {{ $BASE_IMAGE }} AS export-stage
 
-RUN apt-get update && apt-get -y install build-essential libphobos2-ldc-shared100
+{{< common/prepare-runtime-environment.containerfile }}
+
 COPY --from=build-stage /opt/build/dmd/generated/linux/release/64/dmd /usr/bin/dmd
 COPY --from=build-stage /opt/build/phobos/generated/linux/release/64/* /usr/lib/
 COPY --from=build-stage /opt/build/dmd/druntime/src /usr/include/dmd/druntime/import
