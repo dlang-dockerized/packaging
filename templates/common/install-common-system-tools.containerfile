@@ -6,5 +6,12 @@
 		curl
 	RUN rm -rf /var/lib/apt/lists/*
 {{# elseif ($DISTRO === 'fedora'): }}
+	RUN dnf -y update
+	RUN dnf -y install \
+		gcc \
+		curl-minimal \
+		gzip \
+		tar \
+		xz
 {{# endif }}
 
