@@ -22,16 +22,12 @@ RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.con
 
 # Download, build and install DMD
 
-{{< common/download-dmd-source.containerfile }}
+{{< dmd/download-dmd-source.containerfile }}
 RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/bin/dmd
 
-{{< common/build-dmd.containerfile }}
+{{< dmd/build-dmd.containerfile }}
 
-{{# if (isset($DL_DUB_TAG)): }}
-	# Download, build and install DUB
-	{{< common/download-dub-source.containerfile }}
-	{{< common/build-dub.containerfile }}
-{{# endif }}
+{{< common/make-dub.containerfile }}
 
 ################
 # export stage #
@@ -46,7 +42,9 @@ COPY --from=build-stage /opt/build/phobos/generated/linux/release/64/* /usr/lib/
 COPY --from=build-stage /opt/build/dmd/druntime/src /usr/include/dmd/druntime/import
 COPY --from=build-stage /opt/build/phobos/std /usr/include/dmd/phobos/std
 COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
-COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
+{{# if (isset($DL_DUB_TAG)): }}
+    COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
+{{# endif }}
 COPY ./resources/dmd.conf /etc/dmd.conf
 COPY ./templates/scripts/entrypoint-dmd.sh /usr/bin/entrypoint
 

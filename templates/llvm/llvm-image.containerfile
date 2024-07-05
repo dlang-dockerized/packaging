@@ -8,11 +8,11 @@ WORKDIR /opt/build
 
 # Install dependencies
 {{< common/install-common-system-tools.containerfile }}
-{{< common/install-llvm-build-deps.containerfile }}
+{{< llvm/install-llvm-build-deps.containerfile }}
 
 # Download, build and install LLVM
-{{< common/download-llvm-source.containerfile }}
-{{< common/build-llvm.containerfile }}
+{{< llvm/download-llvm-source.containerfile }}
+{{< llvm/build-llvm.containerfile }}
 
 ################
 # export stage #

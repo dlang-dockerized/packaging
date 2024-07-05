@@ -18,7 +18,7 @@ WORKDIR /opt/build
 # Install dependencies
 
 {{< common/install-common-system-tools.containerfile }}
-{{< common/install-ldc-build-deps.containerfile }}
+{{< ldc/install-ldc-build-deps.containerfile }}
 
 # Copy prebuilt LLVM from dlang-dockerized/llvm
 COPY --from=llvm-imported /opt/llvm/ /opt/llvm/
@@ -31,23 +31,19 @@ COPY --from=llvm-imported /opt/llvm/ /opt/llvm/
 
 # Download, build and install LDC
 
-{{< common/download-ldc-source.containerfile }}
+{{< ldc/download-ldc-source.containerfile }}
 
 {{# if (isset($LDC_BOOT_IMAGE)): }}
 	ENV DMD=/opt/ldc-bootstrap/bin/ldmd2
 {{# endif }}
-{{< common/build-ldc.containerfile }}
+{{< ldc/build-ldc.containerfile }}
 
 # Self-test
 COPY ./resources/helloworld.d /opt/helloworld.d
 RUN /opt/ldc/bin/ldmd2 -run /opt/helloworld.d
 RUN rm /opt/helloworld.d
 
-{{# if (isset($DL_DUB_TAG)): }}
-	# Download, build and install DUB
-	{{< common/download-dub-source.containerfile }}
-	{{< common/build-dub.containerfile }}
-{{# endif }}
+{{< common/make-dub.containerfile }}
 
 ################
 # export stage #
