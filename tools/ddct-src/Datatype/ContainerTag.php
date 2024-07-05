@@ -11,15 +11,8 @@ final class ContainerTag
     private function __construct(
         public readonly string $containerNamespace,
         public readonly string $appName,
-        public readonly string $appVersion,
-        public readonly string $baseImageAlias,
+        public readonly ContainerVersionTag $version,
     ) {
-    }
-
-    public function parseVersion(): ContainerVersionTag
-    {
-        $semver = SemVer::parseLax($this->appVersion);
-        return ContainerVersionTag::fromSemVer($semver, $this->baseImageAlias);
     }
 
     public function __toString(): string
@@ -27,19 +20,18 @@ final class ContainerTag
         return
             $this->containerNamespace
             . '/' . $this->appName
-            . ':' . $this->appVersion
-            . '-' . $this->baseImageAlias;
+            . ':' . $this->version;
     }
 
     public static function makeFromRecipe(
         ContainerFileRecipe $recipe,
         BaseImage $baseImage,
     ): self {
+        $semver = SemVer::parse($recipe->version);
         return new self(
             PackagerInfo::getContainerNamespace(),
             $recipe->app,
-            $recipe->version,
-            $baseImage->alias,
+            ContainerVersionTag::fromSemVer($semver, $baseImage->alias),
         );
     }
 }

@@ -6,20 +6,10 @@
 	$druntimeMonorepo = ($DMD_SEMVER_MINOR >= 101);
 	if (!$druntimeMonorepo) $druntimeGhRepoUrl = 'https://github.com/dlang/druntime';
 ?>
-{{# if (!isset($DL_DMD_TAG)): }}
-	!!! Error: $DL_DMD_TAG is not set !!!
-{{# endif }}
-{{# if ($DL_DMD_TAG === 'master'): }}
+{{# if (isset($dmd_override_branch)): }}
 	<?php
-		$dlDmdUrl    = "{$dmdGhRepoUrl}/archive/refs/heads/master.tar.gz";
-		$dlPhobosUrl = "{$phobosGhRepoUrl}/archive/refs/heads/master.tar.gz";
-		if (!$druntimeMonorepo) $dlDruntimeUrl = "{$druntimeGhRepoUrl}/archive/refs/heads/master.tar.gz";
-	?>
-{{# elseif ($DL_DMD_TAG === 'stable'): }}
-	<?php
-		$dlDmdUrl    = '{$dmdGhRepoUrl}/archive/refs/heads/stable.tar.gz';
-		$dlPhobosUrl = '{$phobosGhRepoUrl}/archive/refs/heads/stable.tar.gz';
-		if (!$druntimeMonorepo) $dlDruntimeUrl = "{$druntimeGhRepoUrl}/archive/refs/heads/stable.tar.gz";
+		$dlDmdUrl    = "{$dmdGhRepoUrl}/archive/refs/heads/{$dmd_override_branch}.tar.gz";
+		$dlPhobosUrl = "{$phobosGhRepoUrl}/archive/refs/heads/{$dmd_override_branch}.tar.gz";
 	?>
 {{# else: }}
 	<?php

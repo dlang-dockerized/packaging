@@ -46,12 +46,20 @@ final class TagMapBuilder
         $source = $this->repository . ':' . $version;
 
         if ($this->firstInRepository) {
-            $this->firstInRepository = false;
+            // Don't reserve wildcard-tags for pre-release versions.
+            if ($version->preRelease === null) {
+                $this->firstInRepository = false;
+            }
+
             $this->pushString($source, $version->baseImageAlias, 'latest');
         }
 
         if ($version->major < $this->previousMajor) {
-            $this->previousMajor = $version->major;
+            // Don't reserve wildcard-tags for pre-release versions.
+            if ($version->preRelease === null) {
+                $this->previousMajor = $version->major;
+            }
+
             $this->previousMinor = PHP_INT_MAX;
 
             $this->push($source, $version->baseImageAlias, $version, 1);
