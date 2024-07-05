@@ -7,6 +7,7 @@ namespace DlangDockerized\Ddct\Util;
 use DlangDockerized\Ddct\Datatype\AAWrapper;
 use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileRecipe;
+use DlangDockerized\Ddct\Datatype\SemVer;
 use DlangDockerized\Ddct\Path;
 use Exception;
 
@@ -68,10 +69,11 @@ class ContainerFile
         return $dir . '/Containerfile';
     }
 
-    public static function generateFile($appName, $appVersion, $baseImageAlias): string
+    public static function generateFile(string $appName, string $appVersion, string $baseImageAlias): string
     {
         $baseImage = BaseImage::resolve($baseImageAlias);
         $recipe = self::loadRecipe($appName, $appVersion);
+        $semver = SemVer::parse($recipe->version);
 
         $containerFileDir = self::getContainerFileTargetDir($appName, $appVersion, $baseImage);
         $containerFilePath = $containerFileDir . '/Containerfile';
@@ -82,8 +84,11 @@ class ContainerFile
         }
 
         $tplVars = array_merge($recipe->env, $baseImage->env);
-        $tplVars['BASE_IMAGE'] = $baseImage->image;
-        $tplVars['BASE_IMAGE_ALIAS'] = $baseImage->alias;
+
+        $varsDerivator = new VariablesDerivator($appName, $semver, $baseImage);
+        $varsDerivator->applyVariables(function (string $key, mixed $value) use (&$tplVars) {
+            $tplVars[$key] = $value;
+        });
 
         $templateEngine = self::getTemplateEngine();
         $templateEngine->executeToFile($recipe->template, $tplVars, $containerFilePath);

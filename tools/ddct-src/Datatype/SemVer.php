@@ -36,6 +36,38 @@ final class SemVer implements Stringable
         return $s;
     }
 
+    public function toString(): string
+    {
+        return $this->__toString();
+    }
+
+    public function toDmString(): string
+    {
+        $s = (string)$this->major;
+        $s .= $this->getMinorDm();
+        $s .= '.' . ($this->minor ?? '*');
+        $s .= '.' . ($this->patch ?? '*');
+
+        if ($this->preRelease !== null) {
+            $s .= '-' . $this->preRelease;
+        }
+
+        if ($this->buildMetadata !== null) {
+            $s .= '+' . $this->buildMetadata;
+        }
+
+        return $s;
+    }
+
+    public function getMinorDm(): string
+    {
+        if ($this->minor === null) {
+            return '*';
+        }
+
+        return sprintf('%03d', $this->minor);
+    }
+
     public static function parse(string $input): ?self
     {
         if (str_starts_with($input, 'v')) {
