@@ -7,6 +7,8 @@ namespace DlangDockerized\Ddct\Util;
 use DlangDockerized\Ddct\Datatype\AAWrapper;
 use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
+use DlangDockerized\Ddct\Datatype\SemVer;
+use DlangDockerized\Ddct\Datatype\VersionSpecifierType;
 use LogicException;
 
 final class TagMapBuilder
@@ -43,7 +45,26 @@ final class TagMapBuilder
             throw new LogicException('`nextRepository()` must be called before `add()`.');
         }
 
+        match ($version->versionSpecifier->type) {
+            VersionSpecifierType::Null => throw new LogicException(
+                'Cannot `add()` a `ContainerVersionTag` of type `Null`.'
+            ),
+            VersionSpecifierType::Branch, VersionSpecifierType::Commit => $this->addGeneric($version),
+            VersionSpecifierType::SemanticTag => $this->addSemanticTag($version),
+        };
+    }
+
+    public function addGeneric(ContainerVersionTag $version): void
+    {
         $source = $this->repository . ':' . $version;
+        $this->pushString($source, $version->baseImageAlias, (string)$version->versionSpecifier);
+    }
+
+    public function addSemanticTag(ContainerVersionTag $versionTag): void
+    {
+        $source = $this->repository . ':' . $versionTag;
+
+        $version = $versionTag->versionSpecifier->semanticTag;
 
         if ($this->firstInRepository) {
             // Don't reserve wildcard-tags for pre-release versions.
@@ -51,7 +72,7 @@ final class TagMapBuilder
                 $this->firstInRepository = false;
             }
 
-            $this->pushString($source, $version->baseImageAlias, 'latest');
+            $this->pushString($source, $versionTag->baseImageAlias, 'latest');
         }
 
         if ($version->major < $this->previousMajor) {
@@ -62,23 +83,23 @@ final class TagMapBuilder
 
             $this->previousMinor = PHP_INT_MAX;
 
-            $this->push($source, $version->baseImageAlias, $version, 1);
+            $this->pushSemanticTag($source, $versionTag->baseImageAlias, $version, 1);
         }
 
         if ($version->minor < $this->previousMinor) {
             $this->previousMinor = $version->minor;
-            $this->push($source, $version->baseImageAlias, $version, 2);
+            $this->pushSemanticTag($source, $versionTag->baseImageAlias, $version, 2);
         }
 
-        $this->push($source, $version->baseImageAlias, $version, 3);
+        $this->pushSemanticTag($source, $versionTag->baseImageAlias, $version, 3);
     }
 
-    private function push(string $source, string $baseImageAlias, ContainerVersionTag $version, int $depth): void
+    private function pushSemanticTag(string $source, string $baseImageAlias, SemVer $version, int $depth): void
     {
         $versionString = match ($depth) {
             1 => (string)$version->major,
             2 => $version->major . '.' . $version->minor,
-            3 => $version->toString(false),
+            3 => (string )$version,
         };
 
         $this->pushString($source, $baseImageAlias, $versionString);

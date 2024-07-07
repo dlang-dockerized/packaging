@@ -5,14 +5,14 @@ declare(strict_types=1);
 namespace DlangDockerized\Ddct\Util;
 
 use DlangDockerized\Ddct\Datatype\BaseImage;
-use DlangDockerized\Ddct\Datatype\SemVer;
 use DlangDockerized\Ddct\Datatype\Versioning;
+use DlangDockerized\Ddct\Datatype\VersionSpecifier;
 
 final class VariablesDerivator
 {
     public function __construct(
         private string $appName,
-        private SemVer $version,
+        private VersionSpecifier $version,
         private BaseImage $baseImage,
     ) {
     }
@@ -26,13 +26,24 @@ final class VariablesDerivator
         $receiver('base_image_alias', $this->baseImage->alias);
         $receiver('BASE_IMAGE_ALIAS', $this->baseImage->alias);
 
-        $receiver('version', $this->version);
+        if ($this->version->isCommit()) {
+            $receiver('commit', $this->version->semanticTag);
+            $receiver('version_string', (string)$this->version);
+        }
+        if ($this->version->isBranch()) {
+            $receiver('branch', $this->version->semanticTag);
+            $receiver('version_string', (string)$this->version);
+        }
 
-        $versionString = match ($this->determineVersioning()) {
-            Versioning::Semantic => $this->version->toString(),
-            Versioning::Dm => $this->version->toDmString(),
-        };
-        $receiver('version_string', $versionString);
+        if ($this->version->isSemantic()) {
+            $receiver('semver', $this->version->semanticTag);
+            $versionString = match ($this->determineVersionNumberScheme()) {
+                Versioning::Semantic => $this->version->semanticTag->toString(),
+                Versioning::Dm => $this->version->semanticTag->toDmString(),
+            };
+
+            $receiver('version_string', $versionString);
+        }
     }
 
     public function getVariables(): array
@@ -44,7 +55,7 @@ final class VariablesDerivator
         return $result;
     }
 
-    private function determineVersioning(): Versioning
+    private function determineVersionNumberScheme(): Versioning
     {
         return match ($this->appName) {
             'dmd' => Versioning::Dm,

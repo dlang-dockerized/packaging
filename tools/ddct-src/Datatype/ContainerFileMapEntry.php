@@ -7,7 +7,7 @@ namespace DlangDockerized\Ddct\Datatype;
 final class ContainerFileMapEntry
 {
     public function __construct(
-        public readonly SemVer $version,
+        public readonly VersionSpecifier $version,
         public readonly ContainerFileRecipe $recipe,
     ) {
     }

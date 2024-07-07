@@ -34,10 +34,6 @@ trait SemVerMatch
             return self::matchComponent($a->buildMetadata, $b->buildMetadata);
         }
 
-        if (property_exists($a, 'baseImageAlias')) {
-            return self::matchComponent($a->baseImageAlias, $b->baseImageAlias);
-        }
-
         return true;
     }
 }

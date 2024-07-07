@@ -7,7 +7,7 @@ namespace DlangDockerized\Ddct\Util;
 use DlangDockerized\Ddct\Datatype\AAWrapper;
 use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileRecipe;
-use DlangDockerized\Ddct\Datatype\SemVer;
+use DlangDockerized\Ddct\Datatype\VersionSpecifier;
 use DlangDockerized\Ddct\Path;
 use Exception;
 
@@ -73,7 +73,7 @@ class ContainerFile
     {
         $baseImage = BaseImage::resolve($baseImageAlias);
         $recipe = self::loadRecipe($appName, $appVersion);
-        $semver = SemVer::parse($recipe->version);
+        $version = VersionSpecifier::parse($appVersion);
 
         $containerFileDir = self::getContainerFileTargetDir($appName, $appVersion, $baseImage);
         $containerFilePath = $containerFileDir . '/Containerfile';
@@ -85,7 +85,7 @@ class ContainerFile
 
         $tplVars = array_merge($recipe->env, $baseImage->env);
 
-        $varsDerivator = new VariablesDerivator($appName, $semver, $baseImage);
+        $varsDerivator = new VariablesDerivator($appName, $version, $baseImage);
         $varsDerivator->applyVariables(function (string $key, mixed $value) use (&$tplVars) {
             $tplVars[$key] = $value;
         });

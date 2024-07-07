@@ -27,11 +27,11 @@ final class ContainerTag
         ContainerFileRecipe $recipe,
         BaseImage $baseImage,
     ): self {
-        $semver = SemVer::parse($recipe->version);
+        $version = VersionSpecifier::parse($recipe->version);
         return new self(
             PackagerInfo::getContainerNamespace(),
             $recipe->app,
-            ContainerVersionTag::fromSemVer($semver, $baseImage->alias),
+            ContainerVersionTag::fromVersionSpecifier($version, $baseImage->alias),
         );
     }
 }

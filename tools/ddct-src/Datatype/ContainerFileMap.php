@@ -8,33 +8,25 @@ use DlangDockerized\Ddct\Util\ContainerFile;
 
 final class ContainerFileMap
 {
-    private readonly AAWrapper $data;
 
     public function __construct(
-        array $sortedData,
+        private readonly AppVersionAppList $data,
     ) {
-        $this->data = new AAWrapper($sortedData);
     }
 
-    public function has(string $name, SemVer $version): bool
+    public function has(string $name, VersionSpecifier $version): bool
     {
         return ($this->get($name, $version) !== null);
     }
 
-    public function get(string $name, SemVer $version): ?ContainerFileRecipe
+    public function get(string $name, VersionSpecifier $version): ?ContainerFileRecipe
     {
-        $appEntries = $this->data->get($name);
-        if ($appEntries === null) {
+        $appVersionList = $this->data->get($name);
+        if ($appVersionList === null) {
             return null;
         }
 
-        foreach ($appEntries as $entry) {
-            if (SemVer::match($entry->version, $version)) {
-                return $entry->recipe;
-            }
-        }
-
-        return null;
+        return $appVersionList->match($version);
     }
 
     public function getByKey(string $key, bool $parseLax = true): ?ContainerFileRecipe
@@ -44,9 +36,7 @@ final class ContainerFileMap
             return null;
         }
 
-        $version = ($parseLax)
-            ? SemVer::parseLax($parsedKey[1])
-            : SemVer::parse($parsedKey[1]);
+        $version = VersionSpecifier::parse($parsedKey[1], $parseLax);
 
         if ($version === null) {
             return null;
@@ -57,42 +47,34 @@ final class ContainerFileMap
 
     public static function parseDefinitions(array $definitions): self
     {
-        $tree = new AAWrapper([]);
+        $tree = new AppVersionAppList();
         foreach ($definitions as $key => $recipeRaw) {
             $keyData = ContainerFile::parseKey($key);
             $appName = $keyData[0];
             $appVersion = $keyData[1];
-            $semver = SemVer::parse($appVersion);
+            $version = VersionSpecifier::parse($appVersion);
 
-            if ($semver === null) {
-                writeln('Warning: Ignoring Containerfile recipe with invalid semver `', $key, '`.');
+            if ($version->isNull()) {
+                writeln('Warning: Ignoring Containerfile recipe with invalid version specifier `', $key, '`.');
                 continue;
             }
 
-            $recipe = ContainerFileRecipe::fromAA($recipeRaw, $appName, $appVersion);
+            $appVersionList = $tree->get($appVersion);
 
             // Run duplicate check, if app already exists.
-            if ($tree->has($appName)) {
-                foreach ($tree->get($appName) as $entry) {
-                    if ($entry->recipe->version === $appVersion) {
-                        writeln('Warning: Skipping duplicate Containerfile recipe entry `', $key, '`.');
-                        continue 2;
-                    }
+            if ($appVersionList !== null){
+                if ($appVersionList->has($version)) {
+                    writeln('Warning: Skipping duplicate or ambiguous Containerfile recipe entry `', $key, '`.');
+                    continue;
                 }
             }
 
-            $entry = new ContainerFileMapEntry($semver, $recipe);
+            $recipe = ContainerFileRecipe::fromAA($recipeRaw, $appName, $appVersion);
+            $entry = new ContainerFileMapEntry($version, $recipe);
             $tree->push($appName, $entry);
         }
 
-        $tree = $tree->getArray();
-        foreach ($tree as &$appVersionList) {
-            usort($appVersionList, function (ContainerFileMapEntry $a, ContainerFileMapEntry $b) {
-                return SemVer::compare($b->version, $a->version);
-            });
-        }
-        unset($appVersionList);
-
+        $tree->sort();
         return new ContainerFileMap($tree);
     }
 }

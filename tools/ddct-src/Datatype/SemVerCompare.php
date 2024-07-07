@@ -40,13 +40,6 @@ trait SemVerCompare
             return strnatcmp($a->preRelease, $b->preRelease);
         }
 
-        if (isset($a->baseImageAlias)) {
-            $baseImageAlias = strnatcmp($a->baseImageAlias, $b->baseImageAlias);
-            if ($baseImageAlias !== 0) {
-                return $baseImageAlias;
-            }
-        }
-
         return 0;
     }
 

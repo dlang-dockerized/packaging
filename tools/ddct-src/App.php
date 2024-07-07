@@ -7,7 +7,7 @@ namespace DlangDockerized\Ddct;
 use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileMap;
 use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
-use DlangDockerized\Ddct\Datatype\SemVer;
+use DlangDockerized\Ddct\Datatype\VersionSpecifier;
 use DlangDockerized\Ddct\Util\ContainerBuilder;
 use DlangDockerized\Ddct\Util\ContainerBuilderStatus;
 use DlangDockerized\Ddct\Util\ContainerEngine;
@@ -106,8 +106,8 @@ final class App
             ContainerFileDefinitions::get()
         );
 
-        $semver = SemVer::parseLax($appVersion);
-        if ($semver === null) {
+        $version = VersionSpecifier::parse($appVersion, true);
+        if ($version === null) {
             errorln('Cannot parse the specified version string `', $appVersion, '`.');
             return 1;
         }
@@ -117,7 +117,7 @@ final class App
         $containerEngine = new ContainerEngine();
         $tagger = new Tagger($containerEngine);
         $containerBuilder = new ContainerBuilder($containerEngine, $map, $tagger);
-        $buildStatus = $containerBuilder->build($appName, $semver, $baseImage);
+        $buildStatus = $containerBuilder->build($appName, $version, $baseImage);
 
         if ($buildStatus === ContainerBuilderStatus::Preexists) {
             writeln('Nothing to do.');
@@ -147,15 +147,15 @@ final class App
             ContainerFileDefinitions::get()
         );
 
-        $semver = SemVer::parseLax($appVersion);
-        if ($semver === null) {
+        $version = VersionSpecifier::parse($appVersion, true);
+        if ($version->isNull()) {
             errorln('Cannot parse the specified version string `', $appVersion, '`.');
             return 1;
         }
 
-        $recipe = $map->get($appName, $semver);
+        $recipe = $map->get($appName, $version);
         if ($recipe === null) {
-            errorln('No recipe found for requested container `', $appName, '`:`', $semver, '`');
+            errorln('No recipe found for requested container `', $appName, '`:`', $version, '`');
             return 1;
         }
 
@@ -247,14 +247,14 @@ final class App
             ContainerFileDefinitions::get()
         );
 
-        $semver = SemVer::parseLax($appVersion);
-        if ($semver === null) {
+        $version = VersionSpecifier::parse($appVersion, true);
+        if ($version === null) {
             errorln('Cannot parse the specified version string `', $appVersion, '`.');
             return 1;
         }
 
         $baseImage = BaseImage::resolve($baseImageAlias);
-        $tagver = ContainerVersionTag::fromSemVer($semver, $baseImage->alias);
+        $tagver = ContainerVersionTag::fromVersionSpecifier($version, $baseImage->alias);
 
         $containerEngine = new ContainerEngine();
         $tagger = new Tagger($containerEngine);

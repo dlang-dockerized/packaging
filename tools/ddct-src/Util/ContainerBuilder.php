@@ -10,7 +10,7 @@ use DlangDockerized\Ddct\Datatype\ContainerFileRecipe;
 use DlangDockerized\Ddct\Datatype\ContainerImage;
 use DlangDockerized\Ddct\Datatype\ContainerTag;
 use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
-use DlangDockerized\Ddct\Datatype\SemVer;
+use DlangDockerized\Ddct\Datatype\VersionSpecifier;
 use Exception;
 
 final class ContainerBuilder
@@ -33,14 +33,14 @@ final class ContainerBuilder
 
     private function buildContainer(ContainerFileRecipe $recipe, BaseImage $baseImage): ContainerBuilderStatus
     {
-        $semver = SemVer::parse($recipe->version);
-        if ($semver === null) {
+        $version = VersionSpecifier::parse($recipe->version);
+        if ($version === null) {
             throw new Exception(
                 'Bad version `' . $recipe->version . '` in container recipe `' . $recipe->app . '`'
             );
         }
 
-        $tagVer = ContainerVersionTag::fromSemVer($semver, $baseImage->alias);
+        $tagVer = ContainerVersionTag::fromVersionSpecifier($version, $baseImage->alias);
 
         if ($this->hasBuiltExact($recipe->app, $tagVer)) {
             writeln('Skipping build of preexisting container `', $recipe->app, ':', $tagVer, '`.');
@@ -82,7 +82,7 @@ final class ContainerBuilder
         return $this->buildByRecipe($recipe, $baseImage);
     }
 
-    public function build(string $app, SemVer $version, BaseImage $baseImage): ContainerBuilderStatus
+    public function build(string $app, VersionSpecifier $version, BaseImage $baseImage): ContainerBuilderStatus
     {
         $recipe = $this->map->get($app, $version);
         if ($recipe === null) {
@@ -127,17 +127,10 @@ final class ContainerBuilder
                 continue;
             }
 
-            if (
-                ($imageVersion->major !== $version->major)
-                || ($imageVersion->minor !== $version->minor)
-                || ($imageVersion->patch !== $version->patch)
-                || ($imageVersion->preRelease !== $version->preRelease)
-                || ($imageVersion->baseImageAlias !== $version->baseImageAlias)
-            ) {
-                continue;
+            $diff = ContainerVersionTag::compare($imageVersion, $version);
+            if ($diff === 0) {
+                return $image;
             }
-
-            return $image;
         }
 
         return null;
