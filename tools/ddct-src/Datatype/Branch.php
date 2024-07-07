@@ -19,11 +19,13 @@ final class Branch
     public static function parse(string $value): ?self
     {
         return match ($value) {
-            'dev' => new Branch($value),
-            'main' => new Branch($value),
-            'master' => new Branch($value),
-            'stable' => new Branch($value),
+            'dev',
+            'ltsmaster',
+            'main',
+            'master',
+            'stable',
             'trunk' => new Branch($value),
+
             default => null
         };
     }
