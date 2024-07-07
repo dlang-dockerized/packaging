@@ -6,8 +6,6 @@ namespace DlangDockerized\Ddct;
 
 final class Path
 {
-    public const bashTplApp = __DIR__ . '/../bash-tpl';
-
     public const definitionsDir = './definitions';
     public const baseImageDefinitionsFile = self::definitionsDir . '/baseimages.ini';
     public const containerFileDefinitionsFile = self::definitionsDir . '/containerfiles.ini';
