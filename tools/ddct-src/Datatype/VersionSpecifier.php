@@ -42,7 +42,7 @@ final class VersionSpecifier
         return ($this->type === VersionSpecifierType::Commit);
     }
 
-    public function isSemantic(): bool
+    public function isSemanticTag(): bool
     {
         return ($this->type === VersionSpecifierType::SemanticTag);
     }

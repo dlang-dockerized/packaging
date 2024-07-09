@@ -1,8 +1,4 @@
 ## Build DMD
-<?php
-	$druntimeMonorepo = ($DMD_SEMVER_MINOR >= 101);
-	$legacyMakefile = ($DMD_SEMVER_MINOR < 107);
-?>
 
 ### Unpack sources
 RUN mkdir -p dmd

@@ -4,7 +4,7 @@
 RUN mkdir ldc-source ldc-build
 RUN tar -xf ldc.tar.gz -C ldc-source --strip-components=1
 RUN tar -xf phobos.tar.gz -C ldc-source/runtime/phobos --strip-components=1
-{{# if (($LDC_SEMVER_MAJOR == 0) || (($LDC_SEMVER_MAJOR == 1) && ($LDC_SEMVER_MINOR <= 30))): }}
+{{# if (!$druntimeMonorepo): }}
 	RUN tar -xf druntime.tar.gz -C ldc-source/runtime/druntime --strip-components=1
 {{# endif }}
 

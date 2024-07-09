@@ -1,17 +1,18 @@
+{{< ldc/ldc-variables.php }}
 ###################
 # imported images #
 ###################
 
-FROM dlang-dockerized/{{ $LLVM_IMAGE }}-{{ $BASE_IMAGE_ALIAS }} AS llvm-imported
-{{# if (isset($LDC_BOOT_IMAGE)): }}
-	FROM dlang-dockerized/{{ $LDC_BOOT_IMAGE }}-{{ $BASE_IMAGE_ALIAS }} AS ldc-bootstrap-imported
+FROM dlang-dockerized/llvm:{{ $dependencies['llvm'] }}-{{ $base_image_alias }} AS llvm-imported
+{{# if ($isBootstrappedByLDC): }}
+	FROM dlang-dockerized/ldc:{{ $dependencies['ldc'] }}-{{ $base_image_alias }} AS ldc-bootstrap-imported
 {{# endif }}
 
 ###############
 # build stage #
 ###############
 
-FROM {{ $BASE_IMAGE }} AS build-stage
+FROM {{ $base_image }} AS build-stage
 
 WORKDIR /opt/build
 
@@ -23,7 +24,7 @@ WORKDIR /opt/build
 # Copy prebuilt LLVM from dlang-dockerized/llvm
 COPY --from=llvm-imported /opt/llvm/ /opt/llvm/
 
-{{# if (isset($LDC_BOOT_IMAGE)): }}
+{{# if ($isBootstrappedByLDC): }}
 	# Copy prebuilt LDC from dlang-dockerized/ldc
 	COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc-bootstrap/
 	RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.conf
@@ -33,7 +34,7 @@ COPY --from=llvm-imported /opt/llvm/ /opt/llvm/
 
 {{< ldc/download-ldc-source.containerfile }}
 
-{{# if (isset($LDC_BOOT_IMAGE)): }}
+{{# if ($isBootstrappedByLDC): }}
 	ENV DMD=/opt/ldc-bootstrap/bin/ldmd2
 {{# endif }}
 {{< ldc/build-ldc.containerfile }}
@@ -49,7 +50,7 @@ RUN rm /opt/helloworld.d
 # export stage #
 ################
 
-FROM {{ $BASE_IMAGE }} AS export-stage
+FROM {{ $base_image }} AS export-stage
 
 {{< common/prepare-runtime-environment.containerfile }}
 

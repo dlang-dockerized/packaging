@@ -2,7 +2,7 @@
 {{# if ($DISTRO === 'debian'): }}
 	RUN DEBIAN_FRONTEND=noninteractive apt-get update
 	RUN DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
-		{{# if (!isset($LDC_BOOT_IMAGE)): }}
+		{{# if (!isset($dependencies['ldc'])): }}
 			libconfig++ \
 		{{# endif }}
 		build-essential

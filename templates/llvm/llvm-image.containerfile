@@ -2,7 +2,7 @@
 # build stage #
 ###############
 
-FROM {{ $BASE_IMAGE }} AS build-stage
+FROM {{ $base_image }} AS build-stage
 
 WORKDIR /opt/build
 
@@ -18,7 +18,7 @@ WORKDIR /opt/build
 # export stage #
 ################
 
-FROM {{ $BASE_IMAGE }} AS export-stage
+FROM {{ $base_image }} AS export-stage
 
 COPY --from=build-stage /opt/llvm/ /opt/llvm/
 

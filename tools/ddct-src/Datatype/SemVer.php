@@ -44,8 +44,7 @@ final class SemVer implements Stringable
     public function toDmString(): string
     {
         $s = (string)$this->major;
-        $s .= $this->getMinorDm();
-        $s .= '.' . ($this->minor ?? '*');
+        $s .= '.' . $this->getMinorDm();
         $s .= '.' . ($this->patch ?? '*');
 
         if ($this->preRelease !== null) {

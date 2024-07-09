@@ -1,14 +1,15 @@
+{{< dmd/dmd-variables.php }}
 ###################
 # imported images #
 ###################
 
-FROM dlang-dockerized/{{ $LDC_BOOT_IMAGE }}-{{ $BASE_IMAGE_ALIAS }} AS ldc-bootstrap-imported
+FROM dlang-dockerized/ldc:{{ $dependencies['ldc'] }}-{{ $base_image_alias }} AS ldc-bootstrap-imported
 
 ###############
 # build stage #
 ###############
 
-FROM {{ $BASE_IMAGE }} AS build-stage
+FROM {{ $base_image }} AS build-stage
 
 WORKDIR /opt/build
 
@@ -33,13 +34,13 @@ RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/bin/dmd
 # export stage #
 ################
 
-FROM {{ $BASE_IMAGE }} AS export-stage
+FROM {{ $base_image }} AS export-stage
 
 {{< common/prepare-runtime-environment.containerfile }}
 
 COPY --from=build-stage /opt/build/dmd/generated/linux/release/64/dmd /usr/bin/dmd
 COPY --from=build-stage /opt/build/phobos/generated/linux/release/64/* /usr/lib/
-{{# if ($DMD_SEMVER_MINOR >= 101): }}
+{{# if ($druntimeMonorepo): }}
     COPY --from=build-stage /opt/build/dmd/druntime/src /usr/include/dmd/druntime/import
 {{# else: }}
     COPY --from=build-stage /opt/build/druntime/src /usr/include/dmd/druntime/import

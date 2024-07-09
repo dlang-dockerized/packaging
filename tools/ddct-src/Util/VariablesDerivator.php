@@ -7,6 +7,7 @@ namespace DlangDockerized\Ddct\Util;
 use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\Versioning;
 use DlangDockerized\Ddct\Datatype\VersionSpecifier;
+use DlangDockerized\Ddct\Datatype\VersionSpecifierType;
 
 final class VariablesDerivator
 {
@@ -14,6 +15,7 @@ final class VariablesDerivator
         private string $appName,
         private VersionSpecifier $version,
         private BaseImage $baseImage,
+        private array $dependencies,
     ) {
     }
 
@@ -22,28 +24,42 @@ final class VariablesDerivator
         $receiver('app_name', $this->appName);
 
         $receiver('base_image', $this->baseImage->image);
-        $receiver('BASE_IMAGE', $this->baseImage->image);
         $receiver('base_image_alias', $this->baseImage->alias);
-        $receiver('BASE_IMAGE_ALIAS', $this->baseImage->alias);
 
-        if ($this->version->isCommit()) {
-            $receiver('commit', $this->version->semanticTag);
-            $receiver('version_string', (string)$this->version);
-        }
-        if ($this->version->isBranch()) {
-            $receiver('branch', $this->version->semanticTag);
-            $receiver('version_string', (string)$this->version);
+        $receiver('version', $this->version);
+
+        switch ($this->version->type) {
+
+            case VersionSpecifierType::Commit:
+                $receiver('commit', $this->version->commit);
+                $receiver('version_string', (string)$this->version);
+                break;
+
+            case VersionSpecifierType::Branch:
+                $receiver('branch', $this->version->branch);
+                $receiver('version_string', (string)$this->version);
+                break;
+
+            case VersionSpecifierType::SemanticTag:
+                $receiver('semver', $this->version->semanticTag);
+                $versionString = match ($this->determineVersionNumberScheme()) {
+                    Versioning::Semantic => $this->version->semanticTag->toString(),
+                    Versioning::Dm => $this->version->semanticTag->toDmString(),
+                };
+                $receiver('version_string', $versionString);
+                break;
         }
 
-        if ($this->version->isSemantic()) {
-            $receiver('semver', $this->version->semanticTag);
-            $versionString = match ($this->determineVersionNumberScheme()) {
-                Versioning::Semantic => $this->version->semanticTag->toString(),
-                Versioning::Dm => $this->version->semanticTag->toDmString(),
-            };
+        $dependenciesAA = [];
+        foreach ($this->dependencies as $dependency) {
+            $parsed = ContainerFile::parseKey($dependency);
+            if ($parsed === false) {
+                continue;
+            }
 
-            $receiver('version_string', $versionString);
+            $dependenciesAA[$parsed[0]] = $parsed[1];
         }
+        $receiver('dependencies', $dependenciesAA);
     }
 
     public function getVariables(): array
