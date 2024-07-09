@@ -34,6 +34,11 @@ final class ContainerFileRecipe
             $dep = [];
         }
 
+        // Convention instead of configuration?
+        if ($tpl === null) {
+            $tpl = "{$appName}/{$appName}-image.containerfile";
+        }
+
         if (!is_string($tpl)) {
             throw new Exception(
                 'Cannot process recipe for Containerfile `'
