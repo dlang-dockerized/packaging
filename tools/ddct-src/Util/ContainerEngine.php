@@ -146,6 +146,19 @@ class ContainerEngine
         $this->passthruCommand('tag', $sourceImage, $tag);
     }
 
+    public function removeImages(bool $force, string ...$images): void
+    {
+        if (count($images) === 0) {
+            return;
+        }
+
+        if ($force) {
+            $this->passthruCommand('rmi', '--force', ...$images);
+        } else {
+            $this->passthruCommand('rmi', ...$images);
+        }
+    }
+
     public static function detectContainerEngine(): ?string
     {
         if (isset($_SERVER['CONTAINER_ENGINE'])) {

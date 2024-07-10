@@ -6,6 +6,7 @@ namespace DlangDockerized\Ddct;
 
 use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileMap;
+use DlangDockerized\Ddct\Datatype\ContainerImage;
 use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
 use DlangDockerized\Ddct\Datatype\VersionSpecifier;
 use DlangDockerized\Ddct\Util\ContainerBuilder;
@@ -43,6 +44,7 @@ final class App
             'build' => $this->build($argc, $argv),
             'can-build' => $this->canBuild($argc, $argv),
             'detect-engine' => $this->detectEngine($argc, $argv),
+            'expunge' => $this->expunge($argc, $argv),
             'generate' => $this->generate($argc, $argv),
             'generate-all' => $this->generateAll($argc, $argv),
             'has-built' => $this->hasBuilt($argc, $argv),
@@ -177,6 +179,25 @@ final class App
         }
 
         outputln($detected);
+        return 0;
+    }
+
+    private function expunge(int $argc, array $argv): int
+    {
+        $containerEngine = new ContainerEngine();
+        $images = $containerEngine->listImages();
+
+        // Don't touch non-dlang-dockerized images.
+        $images = array_filter($images, function (ContainerImage $image) {
+            return $image->isOurs();
+        });
+
+        $images = array_map('strval', $images);
+
+        // No duplicates.
+        $images = array_unique($images);
+
+        $containerEngine->removeImages(true, ...$images);
         return 0;
     }
 

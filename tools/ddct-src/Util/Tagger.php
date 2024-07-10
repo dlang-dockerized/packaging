@@ -58,9 +58,7 @@ class Tagger
         $tree = new AAWrapper([]);
 
         foreach ($images as $image) {
-            $isOurs = ($image->getNamespace() == PackagerInfo::getContainerNamespace());
-
-            if (!$isOurs || ($image->tag === null)) {
+            if (!$image->isOurs() || ($image->tag === null)) {
                 continue;
             }
 

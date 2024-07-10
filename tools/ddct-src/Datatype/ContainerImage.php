@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace DlangDockerized\Ddct\Datatype;
 
+use DlangDockerized\Ddct\Util\PackagerInfo;
+
 final class ContainerImage
 {
     private ?string $repoNamespace = null;
@@ -56,6 +58,11 @@ final class ContainerImage
     public function parseVersionTag(): ?ContainerVersionTag
     {
         return ContainerVersionTag::parseLax($this->tag);
+    }
+
+    public function isOurs(): bool
+    {
+        return ($this->getNamespace() == PackagerInfo::getContainerNamespace());
     }
 
     public function __toString(): string
