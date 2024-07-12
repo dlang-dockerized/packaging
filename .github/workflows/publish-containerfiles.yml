@@ -17,8 +17,8 @@ jobs:
           echo $SSH_KEY_64 | base64 --decode > ~/.ssh/id_gh
           chmod 600 ~/.ssh/id_gh
           echo -e "Host github.com\n\tIdentityFile=%d/.ssh/id_gh" >> ~/.ssh/config
-          git config user.name "dlang-dockerizer"
-          git config user.email "175454113+dlang-dockerizer@users.noreply.github.com"
+          git config --global user.name "dlang-dockerizer"
+          git config --global user.email "175454113+dlang-dockerizer@users.noreply.github.com"
 
       - name: "Clone public Containerfiles"
         run: git clone --depth=1 --branch=dlang-rox 'git@github.com:dlang-dockerized/containerfiles.git' ./containerfiles
