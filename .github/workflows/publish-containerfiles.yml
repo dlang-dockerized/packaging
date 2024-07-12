@@ -1,0 +1,31 @@
+name: Publish Containerfiles
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  publish-containerfiles:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: "Setup Git"
+        env:
+          SSH_KEY_64: ${{ secrets.CONTAINERFILES_SSH_KEY_64 }}
+        run: |
+          mkdir -p ~/.ssh
+          echo $SSH_KEY_64 | base64 --decode > ~/.ssh/id_gh
+          chmod 600 ~/.ssh/id_gh
+          echo -e "Host github.com\n\tIdentityFile=%d/.ssh/id_gh" >> ~/.ssh/config
+          git config user.name "dlang-dockerizer"
+          git config user.email "175454113+dlang-dockerizer@users.noreply.github.com"
+
+      - name: "Clone public Containerfiles"
+        run: git clone --depth=1 --branch=dlang-rox 'git@github.com:dlang-dockerized/containerfiles.git' ./containerfiles
+      - name: "Generate Containerfiles"
+        run: ./ddct generate-all
+      - name: "Publish updated Containerfiles"
+        run: |
+          git -C ./containerfiles add -A
+          git -C ./containerfiles commit -m "Update containerfiles to dlang-dockerized/packaging@${GITHUB_SHA}"
+          git -C ./containerfiles push
