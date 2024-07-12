@@ -18,6 +18,9 @@ if [ -d "$cfDir" ]; then
 	exit 1
 fi
 
+# Query current dlang-dockerized commit for use in downstream commit message.
+currCommit="$(git rev-parse HEAD)"
+
 # Clone "containerfiles" repo.
 git clone --depth=1 --branch=dlang-rox "$cfRepo" "$cfDir"
 
@@ -27,6 +30,6 @@ git clone --depth=1 --branch=dlang-rox "$cfRepo" "$cfDir"
 # Commit changes.
 cd "$cfDir"
 git add -A
-git commit -m "Update containerfiles"
+git commit -m "Update containerfiles to dlang-dockerized/packaging@$currCommit"
 git push
 cd ..
