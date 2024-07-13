@@ -25,7 +25,4 @@ jobs:
       - name: "Generate Containerfiles"
         run: ./ddct generate-all
       - name: "Publish updated Containerfiles"
-        run: |
-          git -C ./containerfiles add -A
-          git -C ./containerfiles commit -m "Update containerfiles to dlang-dockerized/packaging@${GITHUB_SHA}"
-          git -C ./containerfiles push
+        run: ./tools/publish-containerfiles-ci.sh
