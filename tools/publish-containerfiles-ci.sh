@@ -1,5 +1,8 @@
 #!/bin/sh
-if git -C ./containerfiles diff --quiet; then
+noUntracked() {
+	return $(git -C ./containerfiles ls-files --other --directory --exclude-standard | sed q | wc -l)
+}
+if git -C ./containerfiles diff --quiet && noUntracked; then
 	echo "Up-to-date."
 	exit 0
 fi
