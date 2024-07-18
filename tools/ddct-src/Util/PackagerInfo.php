@@ -15,7 +15,9 @@ final class PackagerInfo
     public static function getContainerNamespace(): string
     {
         if (self::$containerNamespace === null) {
-            self::$containerNamespace = $_SERVER['CONTAINER_NAMESPACE'] ?? 'dlang-dockerized';
+            self::$containerNamespace = (empty($_SERVER['CONTAINER_NAMESPACE']))
+                ? 'dlang-dockerized'
+                : $_SERVER['CONTAINER_NAMESPACE'];
         }
 
         return self::$containerNamespace;

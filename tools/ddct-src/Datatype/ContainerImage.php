@@ -37,6 +37,15 @@ final class ContainerImage
         $this->repoName = substr($this->repository, $idxSep + 1);
     }
 
+    public function hasFullName(): bool
+    {
+        return (
+            !empty($this->getName())
+            && !empty($this->getNamespace())
+            && !empty($this->tag)
+        );
+    }
+
     public function getNamespace(): string
     {
         if ($this->repoNamespace === null) {

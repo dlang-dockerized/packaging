@@ -50,6 +50,7 @@ final class App
             'has-built' => $this->hasBuilt($argc, $argv),
             'namespace-copy' => $this->namespaceCopy($argc, $argv),
             'namespace-echo' => $this->namespaceEcho($argc, $argv),
+            'namespace-publish' => $this->namespacePublish($argc, $argv),
             'namespace-remove-all' => $this->namespaceRemoveAll($argc, $argv),
             'tag' => $this->tag($argc, $argv),
 
@@ -346,11 +347,38 @@ final class App
     private function namespaceEcho(int $argc, array $argv): int
     {
         if ($argc != 2) {
+            errorln('Command `echo` does not support any arguments.');
             return 1;
         }
 
         outputln(PackagerInfo::getContainerNamespace());
         return 0;
+    }
+
+    private function namespacePublish(int $argc, array $argv): int
+    {
+        if ($argc !== 2) {
+            errorln('Command `namespace-publish` does not support any arguments.');
+            return 1;
+        }
+
+        $containerEngine = new ContainerEngine();
+
+        foreach ($containerEngine->listImages() as $image) {
+            if (!$image->isOurs()) {
+                continue;
+            }
+
+            if (!$image->hasFullName()) {
+                writeln('Warning: Skipping image `', $image->id, '` with no full name.');
+                continue;
+            }
+
+            $imageFullName = (string)$image;
+            $containerEngine->pushImage($imageFullName);
+        }
+
+        return 1;
     }
 
     private function tag(int $argc, array $argv): int

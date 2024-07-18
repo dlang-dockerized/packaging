@@ -159,6 +159,11 @@ class ContainerEngine
         }
     }
 
+    public function pushImage(string $name): void
+    {
+        $this->passthruCommand('push', $name);
+    }
+
     public static function detectContainerEngine(): ?string
     {
         if (isset($_SERVER['CONTAINER_ENGINE'])) {
