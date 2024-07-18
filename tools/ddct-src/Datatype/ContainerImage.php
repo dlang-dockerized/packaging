@@ -26,7 +26,7 @@ final class ContainerImage
             return;
         }
 
-        $idxSep = strpos($this->repository, '/');
+        $idxSep = strrpos($this->repository, '/');
         if ($idxSep === false) {
             $this->repoNamespace = '';
             $this->repoName = '';
