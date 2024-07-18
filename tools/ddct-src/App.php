@@ -14,6 +14,7 @@ use DlangDockerized\Ddct\Util\ContainerBuilderStatus;
 use DlangDockerized\Ddct\Util\ContainerEngine;
 use DlangDockerized\Ddct\Util\ContainerFile;
 use DlangDockerized\Ddct\Util\ContainerFileDefinitions;
+use DlangDockerized\Ddct\Util\PackagerInfo;
 use DlangDockerized\Ddct\Util\Tagger;
 use Exception;
 
@@ -44,10 +45,12 @@ final class App
             'build' => $this->build($argc, $argv),
             'can-build' => $this->canBuild($argc, $argv),
             'detect-engine' => $this->detectEngine($argc, $argv),
-            'expunge' => $this->expunge($argc, $argv),
             'generate' => $this->generate($argc, $argv),
             'generate-all' => $this->generateAll($argc, $argv),
             'has-built' => $this->hasBuilt($argc, $argv),
+            'namespace-copy' => $this->namespaceCopy($argc, $argv),
+            'namespace-echo' => $this->namespaceEcho($argc, $argv),
+            'namespace-remove-all' => $this->namespaceRemoveAll($argc, $argv),
             'tag' => $this->tag($argc, $argv),
 
             default => $this->notACommand($userCommand),
@@ -182,7 +185,7 @@ final class App
         return 0;
     }
 
-    private function expunge(int $argc, array $argv): int
+    private function namespaceRemoveAll(int $argc, array $argv): int
     {
         $containerEngine = new ContainerEngine();
         $images = $containerEngine->listImages();
@@ -288,6 +291,65 @@ final class App
 
         outputln($image);
 
+        return 0;
+    }
+
+    private function namespaceCopy(int $argc, array $argv): int
+    {
+        $useDefaultNamespaceAsSource = ($argc === 3);
+
+        if (!$useDefaultNamespaceAsSource && ($argc !== 4)) {
+            errorln('Invalid number of arguments.');
+            usageln($argv[0], 'namespace-copy [<source-repo-namespace>] <target-repo-namespace>');
+            return 1;
+        }
+
+        $namespaceSource = ($useDefaultNamespaceAsSource)
+            ? PackagerInfo::getContainerNamespace()
+            : $argv[2];
+        $namespaceSourceLength = strlen($namespaceSource);
+
+        $namespaceTarget = ($useDefaultNamespaceAsSource)
+            ? $argv[2]
+            : $argv[3];
+
+        $containerEngine = new ContainerEngine();
+
+        foreach ($containerEngine->listImages() as $imageSource) {
+            // Is in <source> namespace?
+            if ($imageSource->getNamespace() !== $namespaceSource) {
+                continue;
+            }
+
+            $tagSource = $imageSource->tag;
+
+            // No tag attached?
+            if ($tagSource === null) {
+                writeln('Warning: Skipping tag-less image entry `', $imageSource->id, '`.');
+                continue;
+            }
+
+            $repoSource = $imageSource->repository;
+            $repoTarget = substr_replace($repoSource, $namespaceTarget, 0, $namespaceSourceLength);
+
+            $imageTarget = new ContainerImage(null, $repoTarget, $tagSource);
+            $fullTagTarget = (string)$imageTarget;
+            $fullTagSource = (string)$imageSource;
+
+            outputln($fullTagTarget);
+            $containerEngine->tagImage($fullTagSource, $fullTagTarget);
+        }
+
+        return 0;
+    }
+
+    private function namespaceEcho(int $argc, array $argv): int
+    {
+        if ($argc != 2) {
+            return 1;
+        }
+
+        outputln(PackagerInfo::getContainerNamespace());
         return 0;
     }
 
