@@ -200,7 +200,7 @@ final class App
         // No duplicates.
         $images = array_unique($images);
 
-        $containerEngine->removeImages(true, ...$images);
+        $containerEngine->removeImages(false, ...$images);
         return 0;
     }
 

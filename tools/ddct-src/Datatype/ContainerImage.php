@@ -67,15 +67,15 @@ final class ContainerImage
 
     public function __toString(): string
     {
-        if ($this->id !== null) {
-            return $this->id;
-        }
-
         if (
             ($this->repository !== null)
             && ($this->tag !== null)
         ) {
             return $this->repository . ':' . $this->tag;
+        }
+
+        if ($this->id !== null) {
+            return $this->id;
         }
 
         return '';
