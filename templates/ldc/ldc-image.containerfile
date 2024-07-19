@@ -3,9 +3,9 @@
 # imported images #
 ###################
 
-FROM dlang-dockerized/llvm:{{ $dependencies['llvm'] }}-{{ $base_image_alias }} AS llvm-imported
+FROM {{ $container_namespace }}/llvm:{{ $dependencies['llvm'] }}-{{ $base_image_alias }} AS llvm-imported
 {{# if ($isBootstrappedByLDC): }}
-	FROM dlang-dockerized/ldc:{{ $dependencies['ldc'] }}-{{ $base_image_alias }} AS ldc-bootstrap-imported
+	FROM {{ $container_namespace }}/ldc:{{ $dependencies['ldc'] }}-{{ $base_image_alias }} AS ldc-bootstrap-imported
 {{# endif }}
 
 ###############
@@ -21,11 +21,11 @@ WORKDIR /opt/build
 {{< common/install-common-system-tools.containerfile }}
 {{< ldc/install-ldc-build-deps.containerfile }}
 
-# Copy prebuilt LLVM from dlang-dockerized/llvm
+# Copy prebuilt LLVM from {{ $container_namespace }}/llvm
 COPY --from=llvm-imported /opt/llvm/ /opt/llvm/
 
 {{# if ($isBootstrappedByLDC): }}
-	# Copy prebuilt LDC from dlang-dockerized/ldc
+	# Copy prebuilt LDC from {{ $container_namespace }}/ldc
 	COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc-bootstrap/
 	RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.conf
 {{# endif }}

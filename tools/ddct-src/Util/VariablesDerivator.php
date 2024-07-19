@@ -21,6 +21,8 @@ final class VariablesDerivator
 
     public function applyVariables(callable $receiver): void
     {
+        $receiver('container_namespace', PackagerInfo::getContainerNamespace());
+
         $receiver('app_name', $this->appName);
 
         $receiver('base_image', $this->baseImage->image);
@@ -29,7 +31,6 @@ final class VariablesDerivator
         $receiver('version', $this->version);
 
         switch ($this->version->type) {
-
             case VersionSpecifierType::Commit:
                 $receiver('commit', $this->version->commit);
                 $receiver('version_string', (string)$this->version);
