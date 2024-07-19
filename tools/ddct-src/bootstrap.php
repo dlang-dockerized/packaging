@@ -33,7 +33,6 @@ spl_autoload_register(function (string $className) {
 require __DIR__ . '/global.php';
 
 // App entry
-// (This code is here at the end in order to resolve issues caused by limitations of “early binding”.)
 $app = new \DlangDockerized\Ddct\App();
 $exitCode = $app->run($argc, $argv);
 exit($exitCode);
