@@ -348,22 +348,15 @@ final class App
 
     private function namespaceCopy(int $argc, array $argv): int
     {
-        $useDefaultNamespaceAsSource = ($argc === 3);
-
-        if (!$useDefaultNamespaceAsSource && ($argc !== 4)) {
+        if ($argc !== 3) {
             errorln('Invalid number of arguments.');
-            usageln($argv[0], 'namespace-copy [<source-repo-namespace>] <target-repo-namespace>');
+            usageln($argv[0], 'namespace-copy <target-repo-namespace>');
             return 1;
         }
 
-        $namespaceSource = ($useDefaultNamespaceAsSource)
-            ? PackagerInfo::getContainerNamespace()
-            : $argv[2];
+        $namespaceSource = PackagerInfo::getContainerNamespace();
         $namespaceSourceLength = strlen($namespaceSource);
-
-        $namespaceTarget = ($useDefaultNamespaceAsSource)
-            ? $argv[2]
-            : $argv[3];
+        $namespaceTarget = $argv[2];
 
         $containerEngine = new ContainerEngine();
 
