@@ -45,6 +45,14 @@ final class ContainerFileMap
         return $this->get($parsedKey[0], $version);
     }
 
+    /**
+     * Do *not* modify the returned AppVersionList!
+     */
+    public function getAllByName(string $name): ?AppVersionList
+    {
+        return $this->data->get($name);
+    }
+
     public static function parseDefinitions(array $definitions): self
     {
         $tree = new AppVersionAppList();
@@ -62,7 +70,7 @@ final class ContainerFileMap
             $appVersionList = $tree->get($appVersion);
 
             // Run duplicate check, if app already exists.
-            if ($appVersionList !== null){
+            if ($appVersionList !== null) {
                 if ($appVersionList->has($version)) {
                     writeln('Warning: Skipping duplicate or ambiguous Containerfile recipe entry `', $key, '`.');
                     continue;

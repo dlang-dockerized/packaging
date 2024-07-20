@@ -8,6 +8,7 @@ use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileMap;
 use DlangDockerized\Ddct\Datatype\ContainerFileRecipe;
 use DlangDockerized\Ddct\Datatype\ContainerImage;
+use DlangDockerized\Ddct\Datatype\ContainerImageTriplet;
 use DlangDockerized\Ddct\Datatype\ContainerTag;
 use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
 use DlangDockerized\Ddct\Datatype\VersionSpecifier;
@@ -90,6 +91,11 @@ final class ContainerBuilder
         }
 
         return $this->buildByRecipe($recipe, $baseImage);
+    }
+
+    public function buildByTriplet(ContainerImageTriplet $triplet): ContainerBuilderStatus
+    {
+        return $this->build($triplet->app, $triplet->version, $triplet->baseImage);
     }
 
     public function hasBuilt(string $app, ContainerVersionTag $version): ?ContainerImage

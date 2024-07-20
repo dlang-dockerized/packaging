@@ -8,7 +8,9 @@ use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\ContainerFileMap;
 use DlangDockerized\Ddct\Datatype\ContainerImage;
 use DlangDockerized\Ddct\Datatype\ContainerVersionTag;
+use DlangDockerized\Ddct\Datatype\UserBuildSelection;
 use DlangDockerized\Ddct\Datatype\VersionSpecifier;
+use DlangDockerized\Ddct\Util\BuildSelector;
 use DlangDockerized\Ddct\Util\ContainerBuilder;
 use DlangDockerized\Ddct\Util\ContainerBuilderStatus;
 use DlangDockerized\Ddct\Util\ContainerEngine;
@@ -43,6 +45,7 @@ final class App
 
         return match ($userCommand) {
             'build' => $this->build($argc, $argv),
+            'build-selection' => $this->buildSelection($argc, $argv),
             'can-build' => $this->canBuild($argc, $argv),
             'detect-engine' => $this->detectEngine($argc, $argv),
             'generate' => $this->generate($argc, $argv),
@@ -129,6 +132,48 @@ final class App
             writeln('Nothing to do.');
         } elseif ($buildStatus === ContainerBuilderStatus::Built) {
             writeln('Done.');
+        }
+
+        return 0;
+    }
+
+    private function buildSelection(int $argc, array $argv): int
+    {
+        $hasSelectionFilePath = ($argc === 3);
+
+        if (!$hasSelectionFilePath && ($argc !== 2)) {
+            errorln('Too many arguments.');
+            usageln($argv[0], 'build-selection [<selection.ini>]');
+            return 1;
+        }
+
+        $selectionFilePath = ($hasSelectionFilePath)
+            ? $argv[2]
+            : Path::definitionsDir . '/build-selection.ini';
+
+        $userBuildSelection = UserBuildSelection::loadFromFile($selectionFilePath);
+
+
+        $map = ContainerFileMap::parseDefinitions(
+            ContainerFileDefinitions::get()
+        );
+
+        $buildSelector = new BuildSelector($map);
+        $machineSelection = $buildSelector->determineSelection($userBuildSelection);
+
+        $containerEngine = new ContainerEngine();
+        $tagger = new Tagger($containerEngine);
+        $containerBuilder = new ContainerBuilder($containerEngine, $map, $tagger);
+
+        foreach ($machineSelection as $triplet) {
+            writeln('Building image `' . $triplet . '` from selection.');
+            $buildStatus = $containerBuilder->buildByTriplet($triplet);
+
+            if ($buildStatus === ContainerBuilderStatus::Preexists) {
+                writeln('-> Nothing to do.');
+            } elseif ($buildStatus === ContainerBuilderStatus::Built) {
+                writeln('-> Done.');
+            }
         }
 
         return 0;
@@ -346,7 +391,7 @@ final class App
 
     private function namespaceEcho(int $argc, array $argv): int
     {
-        if ($argc != 2) {
+        if ($argc !== 2) {
             errorln('Command `echo` does not support any arguments.');
             return 1;
         }
