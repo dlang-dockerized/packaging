@@ -233,6 +233,12 @@ final class App
 
     private function namespaceRemoveAll(int $argc, array $argv): int
     {
+        if ($argc !== 2) {
+            errorln('Command `namespace-remove-all` does not support any arguments.');
+            writeln('Hint: Use the environment variable `CONTAINER_NAMESPACE` to specify which namespace to expunge.');
+            return 1;
+        }
+
         $containerEngine = new ContainerEngine();
         $images = $containerEngine->listImages();
 
