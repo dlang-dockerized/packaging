@@ -5,7 +5,8 @@
 		{{# if (!isset($dependencies['ldc'])): }}
 			libconfig++ \
 		{{# endif }}
-		build-essential
+		build-essential \
+		curl
 	RUN rm -rf /var/lib/apt/lists/*
 {{# else: }}
 	!!! Unsupported distro. !!!
