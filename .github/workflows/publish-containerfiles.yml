@@ -20,9 +20,14 @@ jobs:
           git config --global user.name "dlang-dockerizer"
           git config --global user.email "175454113+dlang-dockerizer@users.noreply.github.com"
 
-      - name: "Clone public Containerfiles"
-        run: git clone --depth=1 --branch=dlang-rox 'git@github.com:dlang-dockerized/containerfiles.git' ./containerfiles
       - name: "Generate Containerfiles"
         run: ./ddct generate-all
+      - name: "Clone public Containerfiles"
+        run: git clone --depth=1 --branch=dlang-rox 'git@github.com:dlang-dockerized/containerfiles.git' ~/containerfiles
+      - name: Sync Containerfiles repo
+        run: |
+          rsync -av --delete ./containerfiles/ ~/containerfiles/containerfiles
+          rsync -av --delete ./resources/ ~/containerfiles/resources
+
       - name: "Publish updated Containerfiles"
         run: ./tools/publish-containerfiles-ci.sh
