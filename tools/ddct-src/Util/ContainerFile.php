@@ -74,6 +74,7 @@ class ContainerFile
         $baseImage = BaseImage::resolve($baseImageAlias);
         $recipe = self::loadRecipe($appName, $appVersion);
         $version = VersionSpecifier::parse($appVersion);
+        $languageLevel = VersionSpecifier::parse($recipe->languageLevel, true);
 
         $containerFileDir = self::getContainerFileTargetDir($appName, $appVersion, $baseImage);
         $containerFilePath = $containerFileDir . '/Containerfile';
@@ -85,7 +86,7 @@ class ContainerFile
 
         $tplVars = array_merge($recipe->env, $baseImage->env);
 
-        $varsDerivator = new VariablesDerivator($appName, $version, $baseImage, $recipe->dependencies);
+        $varsDerivator = new VariablesDerivator($appName, $version, $languageLevel, $baseImage, $recipe->dependencies);
         $varsDerivator->applyVariables(function (string $key, mixed $value) use (&$tplVars) {
             $tplVars[$key] = $value;
         });

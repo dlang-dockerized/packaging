@@ -11,6 +11,7 @@ final class ContainerFileRecipe
     public function __construct(
         public readonly string $app,
         public readonly string $version,
+        public readonly ?string $languageLevel,
         public readonly string $template,
         public readonly array $env,
         public readonly array $dependencies,
@@ -22,9 +23,22 @@ final class ContainerFileRecipe
         $data = new AAWrapper($aa);
         $key = $appName . ':' . $appVersion;
 
+        $lvl = $data->get('level');
         $tpl = $data->get('template');
         $env = $data->get('env');
         $dep = $data->get('dependencies');
+
+        if ($lvl === null) {
+            $lvl = $appVersion;
+        } elseif (!is_string($lvl)) {
+            throw new Exception(
+                'Cannot process recipe for Containerfile `'
+                . $key
+                . '` because of invalid `level` string.'
+            );
+        } elseif ($lvl === 'false') {
+            $lvl = null;
+        }
 
         if ($env === null) {
             $env = [];
@@ -66,6 +80,7 @@ final class ContainerFileRecipe
         return new ContainerFileRecipe(
             $appName,
             $appVersion,
+            $lvl,
             $tpl,
             $env,
             $dep,
