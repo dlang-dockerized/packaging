@@ -22,8 +22,8 @@
 {{# else: }}
 	<?php
 		$dlDmdUrl = "{$dmdGhRepoUrl}/archive/refs/tags/v{$version_string}.tar.gz";
-		$dlPhobosUrl = "{$phobosGhRepoUrl}/archive/refs/tags/{$version_string}.tar.gz";
-		if (!$druntimeMonorepo) $dlDruntimeUrl = "{$druntimeGhRepoUrl}/archive/refs/tags/{$version_string}.tar.gz";
+		$dlPhobosUrl = "{$phobosGhRepoUrl}/archive/refs/tags/v{$version_string}.tar.gz";
+		if (!$druntimeMonorepo) $dlDruntimeUrl = "{$druntimeGhRepoUrl}/archive/refs/tags/v{$version_string}.tar.gz";
 	?>
 {{# endif }}
 RUN curl -fLsSo dmd.tar.gz "{{ $dlDmdUrl }}"
