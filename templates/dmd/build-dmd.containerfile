@@ -19,6 +19,9 @@ RUN tar -xf phobos.tar.gz -C phobos --strip-components=1
 	RUN make -C dmd
 {{# endif }}
 
+{{# if ($legacyBinDir): }}
+	{{< dmd/adapt-legacy-dmd-output-structure.containerfile }}
+{{# endif }}
 RUN rm /usr/bin/dmd
 RUN ln -s /opt/build/dmd/generated/linux/release/64/dmd /usr/bin/dmd
 ENV DMD=/usr/bin/dmd
@@ -28,4 +31,8 @@ ENV DMD=/usr/bin/dmd
 	RUN make -C phobos -f posix.mak
 {{# else: }}
 	RUN make -C phobos
+{{# endif }}
+
+{{# if ($legacyBinDir): }}
+	{{< dmd/adapt-legacy-phobos-output-structure.containerfile }}
 {{# endif }}

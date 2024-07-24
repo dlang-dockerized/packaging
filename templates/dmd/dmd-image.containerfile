@@ -16,6 +16,7 @@ WORKDIR /opt/build
 # Install dependencies
 
 {{< common/install-common-system-tools.containerfile }}
+{{< dmd/install-dmd-build-deps.containerfile }}
 
 # Copy prebuilt LDC from {{ $container_namespace }}/ldc
 COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc-bootstrap/

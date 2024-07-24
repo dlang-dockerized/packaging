@@ -14,3 +14,11 @@ $legacyMakefile = match($version->type) {
 	VersionSpecifierType::Branch,
 	VersionSpecifierType::Commit => $DMD_LEGACY_MAKEFILE ?? false,
 };
+
+$legacyBinDir = (
+	($semver->major < 2)
+	|| (
+		($semver->major === 2) &&
+		($semver->minor < 74)
+	)
+);
