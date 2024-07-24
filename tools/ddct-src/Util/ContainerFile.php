@@ -74,7 +74,9 @@ class ContainerFile
         $baseImage = BaseImage::resolve($baseImageAlias);
         $recipe = self::loadRecipe($appName, $appVersion);
         $version = VersionSpecifier::parse($appVersion);
-        $languageLevel = VersionSpecifier::parse($recipe->languageLevel, true);
+        $languageLevel = ($recipe->languageLevel === null)
+            ? null
+            : VersionSpecifier::parse($recipe->languageLevel, true);
 
         $containerFileDir = self::getContainerFileTargetDir($appName, $appVersion, $baseImage);
         $containerFilePath = $containerFileDir . '/Containerfile';

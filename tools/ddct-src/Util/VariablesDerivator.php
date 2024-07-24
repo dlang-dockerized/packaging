@@ -14,7 +14,7 @@ final class VariablesDerivator
     public function __construct(
         private string $appName,
         private VersionSpecifier $version,
-        private VersionSpecifier $languageLevel,
+        private ?VersionSpecifier $languageLevel,
         private BaseImage $baseImage,
         private array $dependencies,
     ) {
@@ -52,7 +52,9 @@ final class VariablesDerivator
                 break;
         }
 
-        $receiver('language_level', $this->languageLevel);
+        if ($this->languageLevel !== null) {
+            $receiver('language_level', $this->languageLevel);
+        }
 
         $dependenciesAA = [];
         foreach ($this->dependencies as $dependency) {
