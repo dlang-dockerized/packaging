@@ -53,7 +53,11 @@ final class VariablesDerivator
         }
 
         if ($this->languageLevel !== null) {
+            $languageLevelString = ($this->languageLevel->type === VersionSpecifierType::SemanticTag)
+                ? $this->languageLevel->semanticTag->toDmString()
+                : (string)$this->languageLevel;
             $receiver('language_level', $this->languageLevel);
+            $receiver('language_level_string', $languageLevelString);
         }
 
         $dependenciesAA = [];
