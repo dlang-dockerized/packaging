@@ -30,6 +30,8 @@ RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/bin/dmd
 
 {{< common/make-dub.containerfile }}
 
+{{< common/make-d-tools.containerfile }}
+
 ################
 # export stage #
 ################
@@ -52,6 +54,11 @@ COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
 {{# endif }}
 COPY ./resources/dmd.conf /etc/dmd.conf
 COPY ./templates/scripts/entrypoint-dmd.sh /usr/bin/entrypoint
+
+# Install D Tools
+COPY --from=build-stage /opt/build/d-tools/generated/linux/64/ddemangle /usr/bin/ddemangle
+COPY --from=build-stage /opt/build/d-tools/generated/linux/64/dustmite /usr/bin/dustmite
+COPY --from=build-stage /opt/build/d-tools/generated/linux/64/rdmd /usr/bin/rdmd
 
 # Self-test
 COPY ./resources/helloworld.d /opt/helloworld.d
