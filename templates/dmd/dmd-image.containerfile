@@ -36,6 +36,7 @@ RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/bin/dmd
 # export stage #
 ################
 
+{{# $buildStage = 'build-stage'; }}
 FROM {{ $base_image }} AS export-stage
 
 {{< common/prepare-runtime-environment.containerfile }}
@@ -55,10 +56,7 @@ COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
 COPY ./resources/dmd.conf /etc/dmd.conf
 COPY ./templates/scripts/entrypoint-dmd.sh /usr/bin/entrypoint
 
-# Install D Tools
-COPY --from=build-stage /opt/build/d-tools/generated/linux/64/ddemangle /usr/bin/ddemangle
-COPY --from=build-stage /opt/build/d-tools/generated/linux/64/dustmite /usr/bin/dustmite
-COPY --from=build-stage /opt/build/d-tools/generated/linux/64/rdmd /usr/bin/rdmd
+{{< d-tools/install-d-tools.containerfile }}
 
 # Self-test
 COPY ./resources/helloworld.d /opt/helloworld.d

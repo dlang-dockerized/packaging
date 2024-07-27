@@ -9,8 +9,9 @@
 ### Build D Tools
 RUN mkdir -p d-tools
 RUN tar -xf d-tools.tar.gz -C d-tools --strip-components=1
+RUN make -C d-tools \
 {{# if ($legacyMakefile): }}
-	RUN make -C d-tools -f posix.mak all
-{{# else: }}
-	RUN make -C d-tools all
+	-f posix.mak \
 {{# endif }}
+	DMD=$DMD \
+	all
