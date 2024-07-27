@@ -69,6 +69,19 @@ to tune the status output to a conservative line-by-line log.
 E.g. `BUILDKIT_PROGRESS=plain ./ddct build …`
 
 
+### Adding new compiler versions
+
+Containerfile definitions are stored
+in [`definitions/containerfiles.ini`](./definitions/containerfiles.ini).
+
+The version supplied by this repo contains a detailed description
+about the structure of this file.
+
+To determine which version of DUB to bundle with which compiler version,
+the accompanying scripts, `./tools/determine-dub-version-of-dmd-release.sh` and
+`./tools/determine-dub-version-of-ldc-release.sh`, can be used.
+
+
 ## Bootstrapping pipeline
 
 While no longer up-to-date,
