@@ -51,6 +51,8 @@ final class App
             'generate' => $this->generate($argc, $argv),
             'generate-all' => $this->generateAll($argc, $argv),
             'has-built' => $this->hasBuilt($argc, $argv),
+            'help' => $this->help($argc, $argv),
+            '--help' => $this->help($argc, $argv),
             'namespace-copy' => $this->namespaceCopy($argc, $argv),
             'namespace-echo' => $this->namespaceEcho($argc, $argv),
             'namespace-publish' => $this->namespacePublish($argc, $argv),
@@ -65,6 +67,33 @@ final class App
     {
         errorln("`{$userCommand}` is not a ddct command.");
         return 1;
+    }
+
+    private function help(int $argc, array $argv): int
+    {
+        if ($argc !== 2) {
+            errorln('Too many arguments.');
+            return 1;
+        }
+
+        writeln(
+            'dlang-dockerized Container Toolkit',
+            "\n\nAvailable commands:\n",
+            "  build                   - Build a specific container image.\n",
+            "  build-selection         - Build the defined selection of container images.\n",
+            "  can-build               - Determine whether a container image is available for building.\n",
+            "  detect-engine           - Detect which container management engine will be used.\n",
+            "  generate-all            - Generate all Containerfiles from the templates.\n",
+            "  generate                - Generate a specific Containerfile from the templates.\n",
+            "  has-built               - Check whether a certain container image has been built and is available.\n",
+            "  help                    - Print this help text.\n",
+            "  namespace-copy          - Copy all images from the current namespace to another.\n",
+            "  namespace-echo          - Print the current namespace.\n",
+            "  namespace-publish       - Publish the current namespace to the \n",
+            "  namespace-remove-all    - Remove all container images from the current namespace (by tag).\n",
+            "  tag                     - Update the tags of all container images within the current namespace.\n",
+        );
+        return 0;
     }
 
     private function readArgsAppNameVersionBaseimage(
