@@ -133,7 +133,7 @@ class ContainerEngine
      */
     public function listImages(): array
     {
-        $result = $this->executeCommand('images', '--format=json');
+        $result = $this->executeCommand('images', '--format={{ json . }}');
 
         return array_map(function (string $json) {
             $data = json_decode($json, true, JSON_THROW_ON_ERROR);
