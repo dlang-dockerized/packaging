@@ -30,7 +30,7 @@ RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/bin/dmd
 
 {{< common/make-dub.containerfile }}
 
-{{< common/make-d-tools.containerfile }}
+{{< extras/make-extras.containerfile }}
 
 ################
 # export stage #
@@ -56,7 +56,7 @@ COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
 COPY ./resources/dmd.conf /etc/dmd.conf
 COPY ./templates/scripts/entrypoint-dmd.sh /usr/bin/entrypoint
 
-{{< d-tools/install-d-tools.containerfile }}
+{{< extras/install-extras.containerfile }}
 
 # Self-test
 COPY ./resources/helloworld.d /opt/helloworld.d

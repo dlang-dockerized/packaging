@@ -25,7 +25,7 @@ FROM {{ $container_namespace }}/llvm:{{ $dependencies['llvm'] }}-{{ $base_image_
 
 {{< common/make-dub.containerfile }}
 
-{{< common/make-d-tools.containerfile }}
+{{< extras/make-extras.containerfile }}
 
 ################
 # export stage #
@@ -38,18 +38,16 @@ FROM {{ $base_image }} AS export-stage
 
 COPY --from={{ $buildStage }} /opt/ldc /opt/ldc
 
-{{< d-tools/install-d-tools.containerfile }}
+{{# if (isset($DL_DUB_TAG)): }}
+	COPY --from={{ $buildStage }} /opt/build/dub/bin/dub /usr/bin/dub
+{{# endif }}
+
+{{< extras/install-extras.containerfile }}
 
 # Self-test
 COPY ./resources/helloworld.d /opt/helloworld.d
 RUN /opt/ldc/bin/ldmd2 -run /opt/helloworld.d
 RUN rm /opt/helloworld.d
-
-{{# if (isset($DL_DUB_TAG)): }}
-	COPY --from={{ $buildStage }} /opt/build/dub/bin/dub /usr/bin/dub
-{{# endif }}
-
-{{< d-tools/install-d-tools.containerfile }}
 
 COPY ./templates/scripts/entrypoint-ldc.sh /usr/bin/entrypoint
 
