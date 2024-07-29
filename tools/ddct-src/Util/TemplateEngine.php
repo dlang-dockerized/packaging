@@ -18,15 +18,18 @@ final class TemplateEngine
     private const phpPrintTag = '<?= ';
     private const phpCloseTagLF = " ?>\n\n";
     private const phpCloseTag = " ?>\n";
-    private const phpIncludeOpenTag = '<?php eval($_te->getCompiledTemplate(\'';
-    private const phpIncludeCloseTag = '\'))?>';
+    private const phpIncludeOpenTag = '<?php $_eh->push(\'';
+    private const phpIncludeMiddle = '\');eval($_te->getCompiledTemplate(\'';
+    private const phpIncludeCloseTag = '\'));$_eh->pop()?>';
     private const tab = "\t";
 
     private array $cache = [];
+    private TemplateExecutionErrorHandlers $errorHandlers;
 
     public function __construct(
         private string $templatesDir,
     ) {
+        $this->errorHandlers = new TemplateExecutionErrorHandlers();
     }
 
     public function compile(string $templateName): void
@@ -104,6 +107,8 @@ final class TemplateEngine
                 $line = substr($line, 4, ($lineLength - 8));
                 unset($lineLength);
                 $result .= $line;
+                $result .= self::phpIncludeMiddle;
+                $result .= $line;
                 $result .= self::phpIncludeCloseTag;
                 continue;
             }
@@ -131,7 +136,7 @@ final class TemplateEngine
         // Shall write compiled template to file?
         if (isset($_SERVER['TPL_DEBUG']) && ($_SERVER['TPL_DEBUG'] === 'file')) {
             file_put_contents(
-                $this->makeTemplatePath($templateName) . '.compiled-tpl.php',
+                $this->makeTemplatePath($templateName) . TemplateExecutionErrorHandlers::fileEndingCompiledTemplate,
                 $this->cache[$templateName]
             );
         }
@@ -173,16 +178,22 @@ final class TemplateEngine
 
     private function executeTemplate(string $templateName, array $variables)
     {
-        (function (TemplateEngine $_te, string $_tplCode, array $_variables) {
+        $this->errorHandlers->push($templateName);
+
+        (function (TemplateEngine $_te, TemplateExecutionErrorHandlers $_eh, string $_tplCode, array $_variables) {
             foreach ($_variables as $_name => $_value) {
                 $$_name = $_value;
             }
             eval($_tplCode);
         })(
             $this,
+            $this->errorHandlers,
             $this->cache[$templateName],
             $variables,
         );
+
+        $this->errorHandlers->pop();
+        $this->errorHandlers->resetAndCheck();
     }
 
     private function makeTemplatePath(string $templateName): string
