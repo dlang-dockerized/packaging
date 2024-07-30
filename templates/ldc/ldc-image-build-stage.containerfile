@@ -13,7 +13,7 @@ WORKDIR /opt/build
 
 # Install dependencies
 
-{{< common/install-common-system-tools.containerfile }}
+{{< common/install-extended-system-tools.containerfile }}
 {{< ldc/install-ldc-build-deps.containerfile }}
 
 # Copy prebuilt LLVM from {{ $container_namespace }}/llvm

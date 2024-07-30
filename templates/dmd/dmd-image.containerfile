@@ -15,7 +15,7 @@ WORKDIR /opt/build
 
 # Install dependencies
 
-{{< common/install-common-system-tools.containerfile }}
+{{< common/install-extended-system-tools.containerfile }}
 
 # Copy prebuilt LDC from {{ $container_namespace }}/ldc
 COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc-bootstrap/

@@ -6,7 +6,8 @@
 			libconfig++ \
 		{{# endif }}
 		build-essential \
-		curl
+		curl \
+		libcurl4-openssl-dev
 	RUN rm -rf /var/lib/apt/lists/*
 {{# else: }}
 	!!! Unsupported distro. !!!
