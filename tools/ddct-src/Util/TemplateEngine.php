@@ -18,9 +18,9 @@ final class TemplateEngine
     private const phpPrintTag = '<?= ';
     private const phpCloseTagLF = " ?>\n\n";
     private const phpCloseTag = " ?>\n";
-    private const phpIncludeOpenTag = '<?php $_eh->push(\'';
-    private const phpIncludeMiddle = '\');eval($_te->getCompiledTemplate(\'';
-    private const phpIncludeCloseTag = '\'));$_eh->pop()?>';
+    private const phpIncludeOpenTag = '<?php $_cts=$_te->getCompiledTemplate(\'';
+    private const phpIncludeMiddle = '\');$_eh->push(\'';
+    private const phpIncludeCloseTag = '\');eval($_cts);$_eh->pop()?>';
     private const tab = "\t";
 
     private array $cache = [];
@@ -29,7 +29,7 @@ final class TemplateEngine
     public function __construct(
         private string $templatesDir,
     ) {
-        $this->errorHandlers = new TemplateExecutionErrorHandlers();
+        $this->errorHandlers = new TemplateExecutionErrorHandlers(__FILE__);
     }
 
     public function compile(string $templateName): void
