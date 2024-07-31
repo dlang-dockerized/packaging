@@ -13,13 +13,13 @@ $druntimeMonorepo = match($version->type) {
 // Unfortunately, branch names of LDC are inconsistent.
 // Its main branch lacks the `ldc-` prefix.
 if ($version->isBranch()) {
-    $phobosBranch = ($branch->name === 'master')
-        ? 'ldc'
-        : 'ldc-' . $branch->name;
+	$phobosBranch = ($branch->name === 'master')
+		? 'ldc'
+		: 'ldc-' . $branch->name;
 
-    if (!$druntimeMonorepo) {
-        $druntimeBranch = ($branch->name === 'master')
-        ? 'ldc'
-        : 'ldc-' . $branch->name;
-    }
+	if (!$druntimeMonorepo) {
+		$druntimeBranch = ($branch->name === 'master')
+		? 'ldc'
+		: 'ldc-' . $branch->name;
+	}
 }
