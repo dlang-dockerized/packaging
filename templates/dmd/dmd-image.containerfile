@@ -44,14 +44,14 @@ FROM {{ $base_image }} AS export-stage
 COPY --from=build-stage /opt/build/dmd/generated/linux/release/64/dmd /usr/bin/dmd
 COPY --from=build-stage /opt/build/phobos/generated/linux/release/64/* /usr/lib/
 {{# if ($druntimeMonorepo): }}
-    COPY --from=build-stage /opt/build/dmd/druntime/src /usr/include/dmd/druntime/import
+	COPY --from=build-stage /opt/build/dmd/druntime/src /usr/include/dmd/druntime/import
 {{# else: }}
-    COPY --from=build-stage /opt/build/druntime/src /usr/include/dmd/druntime/import
+	COPY --from=build-stage /opt/build/druntime/src /usr/include/dmd/druntime/import
 {{# endif }}
 COPY --from=build-stage /opt/build/phobos/std /usr/include/dmd/phobos/std
 COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
 {{# if (isset($extras['dub'])): }}
-    COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
+	COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
 {{# endif }}
 COPY ./resources/dmd.conf /etc/dmd.conf
 COPY ./templates/scripts/entrypoint-dmd.sh /usr/bin/entrypoint
