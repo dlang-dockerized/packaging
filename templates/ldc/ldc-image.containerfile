@@ -45,7 +45,7 @@ COPY ./resources/helloworld.d /opt/helloworld.d
 RUN /opt/ldc/bin/ldmd2 -run /opt/helloworld.d
 RUN rm /opt/helloworld.d
 
-{{# if (isset($DL_DUB_TAG)): }}
+{{# if (isset($extras['dub'])): }}
 	COPY --from={{ $buildStage }} /opt/build/dub/bin/dub /usr/bin/dub
 {{# endif }}
 

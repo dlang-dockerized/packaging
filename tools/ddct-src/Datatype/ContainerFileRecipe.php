@@ -15,6 +15,7 @@ final class ContainerFileRecipe
         public readonly string $template,
         public readonly array $env,
         public readonly array $dependencies,
+        public readonly array $extras,
     ) {
     }
 
@@ -27,6 +28,7 @@ final class ContainerFileRecipe
         $tpl = $data->get('template');
         $env = $data->get('env');
         $dep = $data->get('dependencies');
+        $ext = $data->get('extras');
 
         if ($lvl === null) {
             $lvl = $appVersion;
@@ -46,6 +48,10 @@ final class ContainerFileRecipe
 
         if ($dep === null) {
             $dep = [];
+        }
+
+        if ($ext === null) {
+            $ext = [];
         }
 
         // Convention instead of configuration?
@@ -77,6 +83,14 @@ final class ContainerFileRecipe
             );
         }
 
+        if (!is_array($ext)) {
+            throw new Exception(
+                'Cannot process recipe for Containerfile `'
+                . $key
+                . '` because of invalid `extras` array.'
+            );
+        }
+
         return new ContainerFileRecipe(
             $appName,
             $appVersion,
@@ -84,6 +98,7 @@ final class ContainerFileRecipe
             $tpl,
             $env,
             $dep,
+            $ext,
         );
     }
 }

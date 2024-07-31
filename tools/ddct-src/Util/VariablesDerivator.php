@@ -17,6 +17,7 @@ final class VariablesDerivator
         private ?VersionSpecifier $languageLevel,
         private BaseImage $baseImage,
         private array $dependencies,
+        private array $extras,
     ) {
     }
 
@@ -70,6 +71,12 @@ final class VariablesDerivator
             $dependenciesAA[$parsed[0]] = $parsed[1];
         }
         $receiver('dependencies', $dependenciesAA);
+
+        $extrasAA = [];
+        foreach ($this->extras as $extra => $version) {
+            $extrasAA[$extra] = VersionSpecifier::parse($version);
+        }
+        $receiver('extras', $extrasAA);
     }
 
     public function getVariables(): array

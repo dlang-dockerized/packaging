@@ -1,6 +1,6 @@
 ## Make DUB
 
-{{# if (isset($DL_DUB_TAG)): }}
+{{# if (isset($extras['dub'])): }}
 	### Download, build and install DUB
 	{{< dub/download-dub-source.containerfile }}
 	{{< dub/build-dub.containerfile }}

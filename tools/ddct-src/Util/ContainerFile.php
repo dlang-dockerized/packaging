@@ -88,7 +88,14 @@ class ContainerFile
 
         $tplVars = array_merge($recipe->env, $baseImage->env);
 
-        $varsDerivator = new VariablesDerivator($appName, $version, $languageLevel, $baseImage, $recipe->dependencies);
+        $varsDerivator = new VariablesDerivator(
+            $appName,
+            $version,
+            $languageLevel,
+            $baseImage,
+            $recipe->dependencies,
+            $recipe->extras,
+        );
         $varsDerivator->applyVariables(function (string $key, mixed $value) use (&$tplVars) {
             $tplVars[$key] = $value;
         });
