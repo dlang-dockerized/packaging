@@ -13,6 +13,10 @@ declare(strict_types=1);
 # ddct: dlang-dockerized Container Toolkit
 #######################################################################
 
+if (version_compare(PHP_VERSION, '8.2', '<')) {
+    fwrite(STDERR, 'Unsupported PHP interpreter; version ^8.2 required.' . PHP_EOL);
+    exit(1);
+}
 
 spl_autoload_register(function (string $className) {
     if (!str_starts_with($className, 'DlangDockerized\\Ddct\\')) {
