@@ -50,7 +50,7 @@ COPY --from=build-stage /opt/build/phobos/generated/linux/release/64/* /usr/lib/
 {{# endif }}
 COPY --from=build-stage /opt/build/phobos/std /usr/include/dmd/phobos/std
 COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
-{{# if (isset($DL_DUB_TAG)): }}
+{{# if (isset($extras['dub'])): }}
     COPY --from=build-stage /opt/build/dub/bin/dub /usr/bin/dub
 {{# endif }}
 COPY ./resources/dmd.conf /etc/dmd.conf
