@@ -2,7 +2,7 @@
 <?php
 	use DlangDockerized\Ddct\Datatype\VersionSpecifierType;
 	$dToolsGhRepoUrl = 'https://github.com/dlang/tools';
-	$dlDToolsUrl = match($version->type) {
+	$dlDToolsUrl = match($language_level->type) {
 		VersionSpecifierType::SemanticTag => "{$dToolsGhRepoUrl}/archive/refs/tags/v{$language_level_string}.tar.gz",
 		VersionSpecifierType::Commit => "{$dToolsGhRepoUrl}/archive/{$DTOOLS_COMMIT}.tar.gz",
 		VersionSpecifierType::Branch => "{$dToolsGhRepoUrl}/archive/refs/heads/{$language_level_string}.tar.gz",
