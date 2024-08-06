@@ -132,6 +132,9 @@ final class ContainerBuilder
             if ($imageVersion === null) {
                 continue;
             }
+            if (!$imageVersion->isFullVersionNumber()) {
+                continue;
+            }
 
             $diff = ContainerVersionTag::compare($imageVersion, $version);
             if ($diff === 0) {

@@ -199,10 +199,14 @@ final class ContainerVersionTag
             return null;
         }
 
+        $major = ($matches['major'] === null) ? null : (int)$matches['major'];
+        $minor = ($matches['minor'] === null) ? null : (int)$matches['minor'];
+        $patch = ($matches['patch'] === null) ? null : (int)$matches['patch'];
+
         return new SemVer(
-            (int)$matches['major'],
-            (int)$matches['minor'],
-            (int)$matches['patch'],
+            $major,
+            $minor,
+            $patch,
             $matches['prerelease'] ?? null,
         );
     }
