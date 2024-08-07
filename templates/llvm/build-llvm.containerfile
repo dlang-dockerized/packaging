@@ -21,6 +21,9 @@ RUN cmake \
 	{{# if ($semver->major >= 12): }}
 		-DLLVM_ENABLE_RUNTIMES=compiler-rt \
 	{{# endif }}
+	{{# if (isset($LLVM_EXPERIMENTAL_TARGETS_TO_BUILD)): }}
+		-DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD="{{ $LLVM_EXPERIMENTAL_TARGETS_TO_BUILD }}" \
+	{{# endif }}
 	-DCMAKE_INSTALL_PREFIX=/opt/llvm \
 	-DCMAKE_C_COMPILER=gcc \
 	-DCMAKE_CXX_COMPILER=g++ \
