@@ -43,23 +43,25 @@ final class App
 
         $userCommand = strtolower($argv[1]);
 
+        // @formatter:off
         return match ($userCommand) {
-            'build' => $this->build($argc, $argv),
-            'build-selection' => $this->buildSelection($argc, $argv),
-            'can-build' => $this->canBuild($argc, $argv),
-            'detect-engine' => $this->detectEngine($argc, $argv),
-            'generate' => $this->generate($argc, $argv),
-            'generate-all' => $this->generateAll($argc, $argv),
-            'has-built' => $this->hasBuilt($argc, $argv),
-            'help', '--help' => $this->help($argc, $argv),
-            'namespace-copy' => $this->namespaceCopy($argc, $argv),
-            'namespace-echo' => $this->namespaceEcho($argc, $argv),
-            'namespace-publish' => $this->namespacePublish($argc, $argv),
-            'namespace-remove-all' => $this->namespaceRemoveAll($argc, $argv),
-            'tag' => $this->tag($argc, $argv),
+            'build'                    => $this->build                 ($argc, $argv),
+            'build-selection'          => $this->buildSelection        ($argc, $argv),
+            'can-build'                => $this->canBuild              ($argc, $argv),
+            'detect-engine'            => $this->detectEngine          ($argc, $argv),
+            'generate'                 => $this->generate              ($argc, $argv),
+            'generate-all'             => $this->generateAll           ($argc, $argv),
+            'has-built'                => $this->hasBuilt              ($argc, $argv),
+            'help', '--help'           => $this->help                  ($argc, $argv),
+            'namespace-copy'           => $this->namespaceCopy         ($argc, $argv),
+            'namespace-echo'           => $this->namespaceEcho         ($argc, $argv),
+            'namespace-publish'        => $this->namespacePublish      ($argc, $argv),
+            'namespace-remove-all'     => $this->namespaceRemoveAll    ($argc, $argv),
+            'tag'                      => $this->tag                   ($argc, $argv),
 
             default => $this->notACommand($userCommand),
         };
+        // @formatter:on
     }
 
     private function notACommand(string $userCommand): int
