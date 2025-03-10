@@ -16,11 +16,15 @@ use Exception;
 
 final class ContainerBuilder
 {
+    private readonly bool $autoPruneImages;
+
     public function __construct(
         private readonly ContainerEngine $containerEngine,
         private readonly ContainerFileMap $map,
         private readonly Tagger $tagger,
+        ?bool $autoPruneImages = null,
     ) {
+        $this->autoPruneImages = $autoPruneImages ?? self::determineAutoPruneImages();
     }
 
     private function buildContainerImpl(ContainerFileRecipe $recipe, BaseImage $baseImage): ContainerBuilderStatus
@@ -58,6 +62,8 @@ final class ContainerBuilder
 
         writeln('--> Updating tags.');
         $this->tagger->applyAll();
+
+        $this->pruneImagesIfEnabled();
 
         return $result;
     }
@@ -143,5 +149,33 @@ final class ContainerBuilder
         }
 
         return null;
+    }
+
+    private function pruneImagesIfEnabled(): void
+    {
+        if (!$this->autoPruneImages) {
+            return;
+        }
+
+        writeln('--> Pruning images.');
+        $this->containerEngine->pruneImages();
+    }
+
+    public static function determineAutoPruneImages(): bool
+    {
+        if (!isset($_SERVER['AUTO_PRUNE_IMAGES'])) {
+            return false;
+        }
+
+        $value = filter_var(
+            $_SERVER['AUTO_PRUNE_IMAGES'],
+            FILTER_VALIDATE_BOOL,
+            FILTER_NULL_ON_FAILURE,
+        );
+        if ($value === null) {
+            throw new Exception('Unsupported value for environment variable `AUTO_PRUNE_IMAGES`.');
+        }
+
+        return $value;
     }
 }

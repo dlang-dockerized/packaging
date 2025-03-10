@@ -159,6 +159,11 @@ class ContainerEngine
         }
     }
 
+    public function pruneImages(): void
+    {
+        $this->passthruCommand('image', 'prune', '--force');
+    }
+
     public function pushImage(string $name): void
     {
         $this->passthruCommand('push', $name);
