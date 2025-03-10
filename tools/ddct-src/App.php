@@ -451,7 +451,7 @@ final class App
             $containerEngine->pushImage($imageFullName);
         }
 
-        return 1;
+        return 0;
     }
 
     private function tag(int $argc, array $argv): int
