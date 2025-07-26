@@ -1,5 +1,8 @@
 ## Prepare runtime-environment
 {{# if ($DISTRO === 'debian'): }}
+	{{< common/enable-old-ubuntu-releases-repo.containerfile }}
+
+	### Install packages
 	RUN DEBIAN_FRONTEND=noninteractive apt-get update
 	RUN DEBIAN_FRONTEND=noninteractive apt-get -y install --no-install-recommends \
 		{{# if (!isset($dependencies['ldc'])): }}

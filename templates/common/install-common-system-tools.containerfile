@@ -4,6 +4,9 @@
 	## Install common system-tools
 {{# endif }}
 {{# if ($DISTRO === 'debian'): }}
+	{{< common/enable-old-ubuntu-releases-repo.containerfile }}
+
+	### Install packages
 	RUN DEBIAN_FRONTEND=noninteractive apt-get update
 	RUN apt-get -y install \
 		{{# if (isset($extendedSystemTools)): }}
