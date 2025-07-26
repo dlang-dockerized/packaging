@@ -5,9 +5,12 @@
 		{{# if (!isset($CMAKE_BOOTSTRAP)): }}
 			cmake \
 		{{# endif }}
-		python3 \
-		ninja-build
+		{{# if (!isset($NINJA_BOOTSTRAP)): }}
+			ninja-build \
+		{{# endif }}
+		python3
 	RUN rm -rf /var/lib/apt/lists/*
 {{# endif }}
 
 {{< cmake/setup-cmake.containerfile }}
+{{< ninja/setup-ninja.containerfile }}

@@ -5,10 +5,13 @@
 		{{# if (!isset($CMAKE_BOOTSTRAP)): }}
 			cmake \
 		{{# endif }}
+		{{# if (!isset($NINJA_BOOTSTRAP)): }}
+			ninja-build \
+		{{# endif }}
 		python3 \
-		ninja-build \
 		libconfig++-dev # libconfig++ only needed for older ldc
 	RUN rm -rf /var/lib/apt/lists/*
 {{# endif }}
 
 {{< cmake/setup-cmake.containerfile }}
+{{< ninja/setup-ninja.containerfile }}
