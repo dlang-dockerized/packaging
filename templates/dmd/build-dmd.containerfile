@@ -19,9 +19,9 @@ RUN tar -xf phobos.tar.gz -C phobos --strip-components=1
 	RUN make -C dmd
 {{# endif }}
 
-RUN rm /usr/bin/dmd
-RUN ln -s /opt/build/dmd/generated/linux/release/64/dmd /usr/bin/dmd
-ENV DMD=/usr/bin/dmd
+RUN rm /usr/local/bin/dmd
+RUN ln -s /opt/build/dmd/generated/linux/release/64/dmd /usr/local/bin/dmd
+ENV DMD=/usr/local/bin/dmd
 
 ### Build Phobos
 {{# if ($legacyMakefile): }}

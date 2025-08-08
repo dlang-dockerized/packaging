@@ -38,6 +38,11 @@ FROM {{ $base_image }} AS export-stage
 
 COPY --from={{ $buildStage }} /opt/ldc /opt/ldc
 
+RUN ln -s /opt/ldc/bin/ldc2 /usr/local/bin/ldc2
+RUN ln -s /opt/ldc/bin/ldmd2 /usr/local/bin/ldmd2
+RUN ln -s /opt/ldc/bin/ldmd2 /usr/local/bin/dmd
+ENV DMD=/usr/local/bin/ldmd2
+
 {{< d-tools/install-d-tools.containerfile }}
 
 # Self-test
@@ -46,12 +51,12 @@ RUN /opt/ldc/bin/ldmd2 -run /opt/helloworld.d
 RUN rm /opt/helloworld.d
 
 {{# if (isset($extras['dub'])): }}
-	COPY --from={{ $buildStage }} /opt/build/dub/bin/dub /usr/bin/dub
+	COPY --from={{ $buildStage }} /opt/build/dub/bin/dub /usr/local/bin/dub
 {{# endif }}
 
 {{< d-tools/install-d-tools.containerfile }}
 
-COPY ./templates/scripts/entrypoint-ldc.sh /usr/bin/entrypoint
+COPY ./templates/scripts/entrypoint-ldc.sh /usr/local/bin/entrypoint
 
-ENTRYPOINT [ "/usr/bin/entrypoint" ]
-CMD [ "/opt/ldc/bin/ldc2" ]
+ENTRYPOINT [ "/usr/local/bin/entrypoint" ]
+CMD [ "/usr/local/bin/ldc2" ]
