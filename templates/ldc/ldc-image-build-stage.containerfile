@@ -30,7 +30,7 @@ COPY --from=llvm-imported /opt/llvm/ /opt/llvm/
 	{{# else: }}
 		COPY --from=build-stage-{{ ($buildStageCounter - 1) }} /opt/ldc/ /opt/ldc-bootstrap/
 	{{# endif }}
-	RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.conf
+	RUN find /opt/ldc-bootstrap/etc/ldc2.conf -type f -exec sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' {} \;
 {{# endif }}
 
 # Build and install LDC
