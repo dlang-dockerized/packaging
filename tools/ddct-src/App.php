@@ -265,14 +265,7 @@ final class App
     private function detectEngineArch(int $argc, array $argv): int
     {
         $containerEngine = new ContainerEngine();
-
-        try {
-            $arch = $containerEngine->getArch();
-        } catch (Exception $ex) {
-            errorln($ex->getMessage());
-            return 1;
-        }
-
+        $arch = $containerEngine->getArch();
         outputln($arch);
         return 0;
     }
