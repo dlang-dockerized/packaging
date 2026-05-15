@@ -78,7 +78,7 @@ final class BuildSelector
             ++$counter;
 
             // Beyond requested version count?
-            if ($counter === $appSelection->versions) {
+            if ($counter >= $appSelection->versions) {
                 break;
             }
         }
