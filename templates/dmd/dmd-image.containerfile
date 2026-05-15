@@ -54,7 +54,7 @@ COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
 	COPY --from=build-stage /opt/build/dub/bin/dub /usr/local/bin/dub
 {{# endif }}
 COPY ./resources/dmd.conf /etc/dmd.conf
-COPY ./templates/scripts/entrypoint-dmd.sh /usr/local/bin/entrypoint
+COPY ./resources/scripts/entrypoint-dmd.sh /usr/local/bin/entrypoint
 
 {{< d-tools/install-d-tools.containerfile }}
 

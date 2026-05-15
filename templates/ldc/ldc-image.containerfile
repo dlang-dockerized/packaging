@@ -56,7 +56,7 @@ RUN rm /opt/helloworld.d
 
 {{< d-tools/install-d-tools.containerfile }}
 
-COPY ./templates/scripts/entrypoint-ldc.sh /usr/local/bin/entrypoint
+COPY ./resources/scripts/entrypoint-ldc.sh /usr/local/bin/entrypoint
 
 ENTRYPOINT [ "/usr/local/bin/entrypoint" ]
 CMD [ "/usr/local/bin/ldc2" ]
