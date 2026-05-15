@@ -19,6 +19,7 @@ final class Branch
     public static function parse(string $value): ?self
     {
         return match ($value) {
+            'ci',
             'dev',
             'ltsmaster',
             'main',
