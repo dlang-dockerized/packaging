@@ -49,6 +49,7 @@ final class App
             'build-selection'          => $this->buildSelection        ($argc, $argv),
             'can-build'                => $this->canBuild              ($argc, $argv),
             'detect-engine'            => $this->detectEngine          ($argc, $argv),
+            'detect-engine-arch'       => $this->detectEngineArch      ($argc, $argv),
             'generate'                 => $this->generate              ($argc, $argv),
             'generate-all'             => $this->generateAll           ($argc, $argv),
             'has-built'                => $this->hasBuilt              ($argc, $argv),
@@ -258,6 +259,21 @@ final class App
         }
 
         outputln($detected);
+        return 0;
+    }
+
+    private function detectEngineArch(int $argc, array $argv): int
+    {
+        $containerEngine = new ContainerEngine();
+
+        try {
+            $arch = $containerEngine->getArch();
+        } catch (Exception $ex) {
+            errorln($ex->getMessage());
+            return 1;
+        }
+
+        outputln($arch);
         return 0;
     }
 

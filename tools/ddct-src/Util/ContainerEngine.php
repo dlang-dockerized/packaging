@@ -169,6 +169,51 @@ class ContainerEngine
         $this->passthruCommand('push', $name);
     }
 
+    private function getArchDocker(): string
+    {
+        $json = $this->executeCommand('version', '--format={{ json .Server.Arch }}');
+
+        if (!isset($json[0])) {
+            throw new Exception('No data received.');
+        }
+
+        return json_decode($json[0], true, JSON_THROW_ON_ERROR);
+    }
+
+    private function getArchPodman(): string
+    {
+        $json = $this->executeCommand('version', '--format={{ json .OsArch }}');
+
+        if (!isset($json[0])) {
+            throw new Exception('No data received.');
+        }
+
+        $osArch = json_decode($json[0], true, JSON_THROW_ON_ERROR);
+        $osArchSplit = explode('/', $osArch);
+        return end($osArchSplit);
+    }
+
+    public function getArch(): string
+    {
+        if (stripos($this->containerEngine, 'docker') !== false) {
+            return $this->getArchDocker();
+        }
+        if (stripos($this->containerEngine, 'podman') !== false) {
+            return $this->getArchPodman();
+        }
+
+        try {
+            return $this->getArchDocker();
+        } catch (Exception) {
+        }
+        try {
+            return $this->getArchPodman();
+        } catch (Exception) {
+        }
+
+        throw new Exception('Unable to determine CPU architecture of container engine.');
+    }
+
     public static function detectContainerEngine(): ?string
     {
         if (isset($_SERVER['CONTAINER_ENGINE'])) {
