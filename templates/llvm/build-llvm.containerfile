@@ -6,9 +6,8 @@ RUN tar -xf llvm.tar.gz -C llvm-source --strip-components=1
 
 {{# if (($semver->major >= 8) && ($semver->major <= 11)): }}
 	### Fix a missing include required for modern c++ in llvm releases 8/9/10/11.
-	WORKDIR /opt/build/llvm-source
-	RUN curl "https://github.com/llvm/llvm-project/commit/b498303066a63a203d24f739b2d2e0e56dca70d1.patch" | patch -p1
-	WORKDIR /opt/build
+	COPY resources/patches/llvm-8-to-11-import.patch llvm-8-to-11-import.patch
+	RUN patch -p1 < llvm-8-to-11-import.patch
 {{# endif }}
 
 ### Build
