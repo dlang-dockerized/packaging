@@ -10,6 +10,13 @@ RUN tar -xf llvm.tar.gz -C llvm-source --strip-components=1
 	RUN patch -p1 < llvm-8-to-11-import.patch
 {{# endif }}
 
+{{# $llvmPatchVarName = "LLVM_{$semver->major}_PATCH"; }}
+{{# if (isset($$llvmPatchVarName)): }}
+	### Patch LLVM
+	COPY resources/patches/{{ $$llvmPatchVarName }} {{ $$llvmPatchVarName }}
+	RUN patch -p1 < {{ $$llvmPatchVarName }}
+{{# endif }}
+
 ### Build
 RUN cmake \
 	-S llvm-source/llvm \
