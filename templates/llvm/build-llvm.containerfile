@@ -23,7 +23,7 @@ RUN cmake \
 	-B llvm-build \
 	-G Ninja \
 	-DCMAKE_BUILD_TYPE=Release \
-	-DLLVM_ENABLE_PROJECTS="clang" \
+	-DLLVM_ENABLE_PROJECTS="clang;lld;lldb" \
 	{{# if ($semver->major >= 12): }}
 		-DLLVM_ENABLE_RUNTIMES=compiler-rt \
 	{{# endif }}

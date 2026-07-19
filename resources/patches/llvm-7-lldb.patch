@@ -1,0 +1,46 @@
+--- ./llvm-source/lldb/scripts/lldb.swig
++++ ./llvm-source/lldb/scripts/lldb.swig
+@@ -152,7 +152,9 @@
+ #define __extension__ /* Undefine GCC keyword to make Swig happy when processing glibc's stdint.h. */
+ /* The ISO C99 standard specifies that in C++ implementations limit macros such
+    as INT32_MAX should only be defined if __STDC_LIMIT_MACROS is. */
++#ifndef __STDC_LIMIT_MACROS
+ #define __STDC_LIMIT_MACROS
++#endif
+ %include "stdint.i"
+ 
+ %include "lldb/lldb-defines.h"
+
+--- ./llvm-source/lldb/source/Plugins/ScriptInterpreter/Python/ScriptInterpreterPython.cpp
++++ ./llvm-source/lldb/source/Plugins/ScriptInterpreter/Python/ScriptInterpreterPython.cpp
+@@ -168,18 +168,12 @@
+   }
+ 
+   void InitializeThreadsPrivate() {
+-    if (PyEval_ThreadsInitialized()) {
+       Log *log(lldb_private::GetLogIfAllCategoriesSet(LIBLLDB_LOG_SCRIPT));
+ 
+       m_was_already_initialized = true;
+       m_gil_state = PyGILState_Ensure();
+       LLDB_LOGV(log, "Ensured PyGILState. Previous state = {0}locked\n",
+                 m_gil_state == PyGILState_UNLOCKED ? "un" : "");
+-      return;
+-    }
+-
+-    // InitThreads acquires the GIL if it hasn't been called before.
+-    PyEval_InitThreads();
+   }
+ 
+   TerminalState m_stdin_tty_state;
+
+--- ./llvm-source/lldb/source/Plugins/ScriptInterpreter/Python/PythonDataObjects.cpp
++++ ./llvm-source/lldb/source/Plugins/ScriptInterpreter/Python/PythonDataObjects-patched.cpp
+@@ -414,7 +414,7 @@
+ size_t PythonString::GetSize() const {
+   if (IsValid()) {
+ #if PY_MAJOR_VERSION >= 3
+-    return PyUnicode_GetSize(m_py_obj);
++    return PyUnicode_GetLength(m_py_obj);
+ #else
+     return PyString_Size(m_py_obj);
+ #endif
