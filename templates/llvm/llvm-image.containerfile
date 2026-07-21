@@ -1,3 +1,4 @@
+{{< llvm/llvm-variables.php }}
 ###############
 # build stage #
 ###############

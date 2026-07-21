@@ -36,6 +36,29 @@ FROM {{ $base_image }} AS export-stage
 
 {{< common/prepare-runtime-environment.containerfile }}
 
+COPY --from=llvm-imported /opt/llvm/bin /opt/llvm/bin
+
+{{# if (in_array('clang', $llvmProjects)): }}
+	RUN ln -s /opt/llvm/bin/clang /usr/local/bin/clang
+	RUN ln -s /opt/llvm/bin/clang /usr/local/bin/clang++
+	RUN ln -s /opt/llvm/bin/llc /usr/local/bin/llc
+{{# endif }}
+
+{{# if (in_array('lld', $llvmProjects)): }}
+	{{# if ($dependenciesVersion['llvm']->getValue()->major >= 10): }}
+		RUN ln -s /opt/llvm/bin/lld /usr/local/bin/ld
+	{{# endif }}
+	RUN ln -s /opt/llvm/bin/lld /usr/local/bin/ld.lld
+	RUN ln -s /opt/llvm/bin/lld /usr/local/bin/lld
+	RUN ln -s /opt/llvm/bin/lld /usr/local/bin/lld-link
+{{# endif }}
+
+{{# if (in_array('lldb', $llvmProjects)): }}
+	COPY --from=llvm-imported /opt/llvm/lib/liblldb.so* /opt/llvm/lib/
+	RUN ln -s /opt/llvm/bin/lldb /usr/local/bin/lldb
+	RUN ln -s /opt/llvm/bin/lli /usr/local/bin/lli
+{{# endif }}
+
 COPY --from={{ $buildStage }} /opt/ldc /opt/ldc
 
 RUN ln -s /opt/ldc/bin/ldc2 /usr/local/bin/ldc2
