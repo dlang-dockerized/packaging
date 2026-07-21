@@ -18,7 +18,7 @@
 		{{# if ($semver->major >= 7): }}
 			{{# if (!isset($LLDB_NO_SETUPTOOLS)): }}
 				python3-setuptools \
-			{{# endif }}	
+			{{# endif }}
 			{{# if (!isset($LLDB_NO_ZOMBIEIMP)): }}
 				python3-zombie-imp \
 			{{# endif }}
