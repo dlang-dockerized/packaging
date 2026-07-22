@@ -8,6 +8,11 @@ RUN tar -xf phobos.tar.gz -C ldc-source/runtime/phobos --strip-components=1
 	RUN tar -xf druntime.tar.gz -C ldc-source/runtime/druntime --strip-components=1
 {{# endif }}
 
+{{# if ($alchemyPatchApplicable): }}
+	COPY resources/patches/ldc-alchemy-{{ $alchemyPatch }}.patch ldc-alchemy-{{ $alchemyPatch }}.patch
+	RUN patch -p1 < ldc-alchemy-{{ $alchemyPatch }}.patch
+{{# endif }}
+
 ### Build
 RUN cmake \
 	-S ldc-source \

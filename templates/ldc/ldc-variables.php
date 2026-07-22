@@ -23,3 +23,25 @@ if ($version->isBranch()) {
 		: 'ldc-' . $branch->name;
 	}
 }
+
+$alchemyPatchApplicable = (
+	$version->isSemanticTag()
+	&& ($semver->major === 1)
+	&& ($semver->minor >= 13)
+	&& ($semver->minor < 29)
+);
+
+if ($alchemyPatchApplicable) {
+	$alchemyPatch = (function () use ($semver) {
+		if ($semver->minor >= 25) {
+			return '1-25';
+		}
+		if ($semver->minor >= 22) {
+			return '1-22';
+		}
+		if ($semver->minor >= 21) {
+			return '1-21';
+		}	
+		return '1-13';
+	})();
+}
