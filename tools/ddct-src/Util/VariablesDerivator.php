@@ -8,6 +8,7 @@ use DlangDockerized\Ddct\Datatype\BaseImage;
 use DlangDockerized\Ddct\Datatype\Versioning;
 use DlangDockerized\Ddct\Datatype\VersionSpecifier;
 use DlangDockerized\Ddct\Datatype\VersionSpecifierType;
+use Exception;
 
 final class VariablesDerivator
 {
@@ -62,15 +63,21 @@ final class VariablesDerivator
         }
 
         $dependenciesAA = [];
+        $dependenciesVersionAA = [];
         foreach ($this->dependencies as $dependency) {
             $parsed = ContainerFile::parseKey($dependency);
             if ($parsed === false) {
                 continue;
             }
 
+            if (array_key_exists($parsed[0], $dependenciesVersionAA)) {
+                throw new Exception('Duplicate dependency entry: ' . $parsed[0]);
+            }
             $dependenciesAA[$parsed[0]] = $parsed[1];
+            $dependenciesVersionAA[$parsed[0]] = VersionSpecifier::parse($parsed[1], true);
         }
         $receiver('dependencies', $dependenciesAA);
+        $receiver('dependenciesVersion', $dependenciesVersionAA);
 
         $extrasAA = [];
         foreach ($this->extras as $extra => $version) {

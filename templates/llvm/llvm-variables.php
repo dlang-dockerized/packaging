@@ -1,15 +1,27 @@
 <?php
 
+$llvmVersion = ($app_name === 'llvm')
+	? $version
+	: $dependenciesVersion['llvm']
+;
+
 $llvmProjects = [
 	'clang',
 ];
 
-if ($version->isSemanticTag()) {
-	if ($semver->major >= 10) {
+$llvmDependsOnLibterminfo = false;
+
+if ($llvmVersion->isSemanticTag()) {
+	$llvmSemVer = $llvmVersion->getValue();
+
+	if ($llvmSemVer->major >= 10) {
 		$llvmProjects[] = 'lld';
 	}
-	if ($semver->major >= 17) {
+	if ($llvmSemVer->major >= 17) {
 		$llvmProjects[] = 'lldb';
+	}
+	if ($llvmSemVer->major < 19) {
+		$llvmDependsOnLibterminfo = true;
 	}
 }
 

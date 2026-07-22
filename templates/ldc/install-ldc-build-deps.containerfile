@@ -1,4 +1,5 @@
 ## Install LDC build deps
+{{< common/ldc-dependencies.php }}
 {{# if ($DISTRO === 'debian'): }}
 	RUN DEBIAN_FRONTEND=noninteractive apt-get update
 	RUN DEBIAN_FRONTEND=noninteractive apt-get -y install \
@@ -8,8 +9,13 @@
 		{{# if (!isset($NINJA_BOOTSTRAP)): }}
 			ninja-build \
 		{{# endif }}
-		python3 \
-		libconfig++-dev # libconfig++ only needed for older ldc
+		{{# if ($ldcDependsOnLibconfig): }}
+			libconfig-dev \
+		{{# endif }}
+		{{# if ($llvmDependsOnLibterminfo): }}
+			libtinfo-dev \
+		{{# endif }}
+		python3
 	RUN rm -rf /var/lib/apt/lists/*
 {{# endif }}
 
