@@ -18,4 +18,8 @@ if ($appIsLDC || $appDependsOnLDC) {
 			|| (($applicableSemVerLDC->major === 1) && ($applicableSemVerLDC->minor < 3))
 		);
 	}
+	elseif ($applicableVersionLDC->isBranch()) {
+		$applicableBranchLDC = $applicableVersionLDC->getValue();
+		$ldcDependsOnLibconfig = ($applicableBranchLDC->name === 'ltsmaster');
+	}
 }
