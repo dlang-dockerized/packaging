@@ -2,7 +2,7 @@
 
 > [!IMPORTANT]
 > Ready-to-use **container images** can be found over there at
-> [*dlang-dockerized/images*](<https://github.com/dlang-dockerized/images>).
+> [**dlang-dockerized/images**](<https://github.com/dlang-dockerized/images>).
 
 This repository provides utilities and recipies for packaging D compilers in container images.
 
