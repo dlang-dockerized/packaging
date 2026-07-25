@@ -56,6 +56,7 @@ COPY --from=llvm-imported /opt/llvm/bin /opt/llvm/bin
 
 {{# if (in_array('lldb', $llvmProjects)): }}
 	COPY --from=llvm-imported /opt/llvm/lib/liblldb.so* /opt/llvm/lib/
+	COPY --from=llvm-imported /opt/llvm/local/lib /opt/llvm/local/lib
 	RUN ln -s /opt/llvm/bin/lldb /usr/local/bin/lldb
 	RUN ln -s /opt/llvm/bin/lli /usr/local/bin/lli
 {{# endif }}
