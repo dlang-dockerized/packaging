@@ -8,6 +8,9 @@
 		{{# if (!isset($NINJA_BOOTSTRAP)): }}
 			ninja-build \
 		{{# endif }}
+		{{# if ($semver->major === 14): }}
+			gcc-multilib \
+		{{# endif }}
 		python3
 	{{# if (in_array('lldb', $llvmProjects)): }}
 		### LLDB build deps
