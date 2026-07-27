@@ -15,10 +15,10 @@ This document outlines the maintenance policies of the *dlang-dockerized* projec
 
 ### Base images
 
-| Image            | Version       | EOL Compat | EOL Pkging |
-| :--------------- | :------------ | ---------: | ---------: |
-| docker.io/debian | bookworm-slim | 2027-06-30 | 2026-07-31 |
-| docker.io/debian | trixie-slim   | 2028-08-31 |      *TBD* |
+| Image            | Version       |        EOL |
+| :--------------- | :------------ | ---------: |
+| docker.io/debian | bookworm-slim | 2026-07-31 |
+| docker.io/debian | trixie-slim   | 2030-06-30 |
 
 ### Software
 
