@@ -4,6 +4,12 @@
 RUN mkdir -p dub
 RUN tar -xf dub.tar.gz -C dub --strip-components=1
 
+{{# if (isset($DUB_PATCH)): }}
+	### Patch DUB
+	COPY resources/patches/{{ $DUB_PATCH }} {{ $DUB_PATCH }}
+	RUN patch -p1 < {{ $DUB_PATCH }} || true
+{{# endif }}
+
 ### Build
 WORKDIR /opt/build/dub
 {{# if ($app_name === 'dmd'): }}
