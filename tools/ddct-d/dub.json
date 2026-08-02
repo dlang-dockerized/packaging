@@ -1,0 +1,10 @@
+{
+    "name": "ddct",
+    "description": "Dlang-dockerized Container Toolkit in D",
+    "authors": ["Dlang-Dockerized Contributors"],
+    "license": "BSL-1.0",
+    "targetType": "executable",
+    "sourcePaths": ["source"],
+    "importPaths": ["source"],
+    "dependencies": {}
+}
