@@ -4,10 +4,10 @@
 RUN mkdir -p dub
 RUN tar -xf dub.tar.gz -C dub --strip-components=1
 
-{{# if (isset($DUB_PATCH)): }}
-	### Patch DUB
-	COPY resources/patches/{{ $DUB_PATCH }} {{ $DUB_PATCH }}
-	RUN patch -p1 < {{ $DUB_PATCH }} || true
+{{# if (!$extras['dub']->isSemanticTag() || (($extras['dub']->semanticTag->major >= 2) || (($extras['dub']->semanticTag->major === 1) && ($extras['dub']->semanticTag->minor >= 20)))): }}
+	### Patch build script
+	COPY resources/patches/wrap-std-process-execute.d wrap-std-process-execute.d
+	RUN cat wrap-std-process-execute.d >> dub/build.d
 {{# endif }}
 
 ### Build
