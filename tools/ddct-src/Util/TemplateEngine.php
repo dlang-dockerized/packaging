@@ -15,7 +15,9 @@ final class TemplateEngine
     private const tplOpenEnd = '{{# end';
     private const phpOpenFull = '<?php ';
     private const tplIncludeTag = '{{< ';
-    private const phpPrintTag = '<?= ';
+    private const phpPrintTag = '<?php $_var = $_vs(';
+    private const phpClosePrintTagLF = "); echo (\$_var) ? \$_var : trigger_error(\$_vsle())?>\n\n";
+    private const phpClosePrintTag = "); echo (\$_var) ? \$_var : trigger_error(\$_vsle())?>\n";
     private const phpCloseTagLF = " ?>\n\n";
     private const phpCloseTag = " ?>\n";
     private const phpIncludeOpenTag = '<?php $_cts=$_te->getCompiledTemplate(\'';
@@ -25,6 +27,7 @@ final class TemplateEngine
 
     private array $cache = [];
     private TemplateExecutionErrorHandlers $errorHandlers;
+    private ?string $validateStringLastErrorString = null;
 
     public function __construct(
         private string $templatesDir,
@@ -115,8 +118,8 @@ final class TemplateEngine
 
             // variables
             $line = str_replace(self::tplPrintTag, self::phpPrintTag, $line);
-            $line = str_replace(self::tplCloseTagLF, self::phpCloseTagLF, $line);
-            $line = str_replace(self::tplCloseTag, self::phpCloseTag, $line);
+            $line = str_replace(self::tplCloseTagLF, self::phpClosePrintTagLF, $line);
+            $line = str_replace(self::tplCloseTag, self::phpClosePrintTag, $line);
             $result .= $line;
         }
 
@@ -180,7 +183,14 @@ final class TemplateEngine
     {
         $this->errorHandlers->push($templateName);
 
-        (function (TemplateEngine $_te, TemplateExecutionErrorHandlers $_eh, string $_tplCode, array $_variables) {
+        (function (
+            TemplateEngine $_te,
+            TemplateExecutionErrorHandlers $_eh,
+            callable $_vs,
+            callable $_vsle,
+            string $_tplCode,
+            array $_variables,
+        ) {
             foreach ($_variables as $_name => $_value) {
                 $$_name = $_value;
             }
@@ -188,6 +198,8 @@ final class TemplateEngine
         })(
             $this,
             $this->errorHandlers,
+            [$this, 'validateString'],
+            [$this, 'validateStringLastError'],
             $this->cache[$templateName],
             $variables,
         );
@@ -199,5 +211,53 @@ final class TemplateEngine
     private function makeTemplatePath(string $templateName): string
     {
         return $this->templatesDir . '/' . $templateName;
+    }
+
+    private function validateString($input): string|false
+    {
+        if ($input === null) {
+            $this->validateStringLastErrorString = 'String is `null`.';
+            return false;
+        }
+
+        $str = (string)$input;
+
+        $wasEscapedCR = false;
+        $wasBackslash = false;
+        foreach (str_split($str) as $c) {
+            if ($c === '\\') {
+                $wasEscapedCR = false;
+                $wasBackslash = true;
+                continue;
+            }
+
+            if ($c === "\n") {
+                if (!$wasBackslash && !$wasEscapedCR) {
+                    $this->validateStringLastErrorString = 'Encountered a non-escaped linebreak (LF) in string.';
+                    return false;
+                }
+                $wasEscapedCR = false;
+            }
+
+            if ($c === "\r") {
+                if (!$wasBackslash) {
+                    $this->validateStringLastErrorString = 'Encountered a non-escaped linebreak (CR) in string.';
+                    return false;
+                }
+
+                $wasEscapedCR = true;
+                $wasBackslash = false;
+                continue;
+            }
+
+            $wasBackslash = false;
+        }
+
+        return $str;
+    }
+
+    private function validateStringLastError(): string
+    {
+        return $this->validateStringLastErrorString ?? '';
     }
 }
