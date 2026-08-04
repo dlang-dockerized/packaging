@@ -16,6 +16,9 @@
 			"$(apt-cache search -n 'libedit[0-9]+$' | sed 's/ .*//')" \
 			"$(apt-cache search -n 'libncurses[0-9]+$' | sed 's/ .*//')" \
 		{{# endif }}
+		{{# if ($app_name === 'opend'): }}
+			libxml2 \
+		{{# endif }}
 		libcurl4-openssl-dev
 	RUN rm -rf /var/lib/apt/lists/*
 {{# else: }}
