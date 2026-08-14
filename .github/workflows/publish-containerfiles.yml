@@ -28,6 +28,7 @@ jobs:
         run: |
           rsync -av --delete ./containerfiles/ ~/containerfiles/containerfiles
           rsync -av --delete ./resources/ ~/containerfiles/resources
+          cp ./templates/COPYING.txt ~/containerfiles/LICENSE
 
       - name: "Publish updated Containerfiles"
         run: ./tools/publish-containerfiles-ci.sh
