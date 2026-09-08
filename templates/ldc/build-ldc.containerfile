@@ -21,6 +21,9 @@ RUN cmake \
 	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=/opt/ldc \
 	-DLLVM_ROOT_DIR=/opt/llvm \
+	{{# if ($buildStageCounter === 3): }}
+		-DBUILD_LTO_LIBS=ON \
+	{{# endif }}
 	-DCMAKE_C_COMPILER=gcc \
 	-DCMAKE_CXX_COMPILER=g++ \
 	-DCMAKE_ASM_COMPILER=gcc
