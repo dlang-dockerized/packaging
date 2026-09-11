@@ -33,8 +33,10 @@ This document outlines the maintenance policies of the *dlang-dockerized* projec
 | LDC    |      v1.40 |      2030-06-30 | Practical relevance: Debian 13 (“Trixie”)                                    |
 | LDC    |      v1.41 |      2031-05-31 | Practical relevance: Ubuntu 26.04 LTS (“Resolute Raccoon”)                   |
 | LDC    |      v1.42 |      2027-03-31 | Courtesy of @0xEAB                                                           |
+| LDC    |      v1.43 |      2027-12-31 | Courtesy of @0xEAB                                                           |
 | DMD    |     v2.090 |      2026-12-31 | Courtesy of @0xEAB                                                           |
 | DMD    |     v2.100 |      2026-12-31 | Courtesy of @0xEAB                                                           |
 | DMD    |     v2.110 |      2026-12-31 | Courtesy of @0xEAB                                                           |
 | DMD    |     v2.111 |      2027-03-31 | Courtesy of @0xEAB                                                           |
 | DMD    |     v2.112 |      2027-12-31 | Courtesy of @0xEAB                                                           |
+| DMD    |     v2.113 |      2027-12-31 | Courtesy of @0xEAB                                                           |
