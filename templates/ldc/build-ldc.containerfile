@@ -45,7 +45,7 @@ RUN cmake \
 		-DCMAKE_CXX_COMPILER=g++ \
 		-DCMAKE_ASM_COMPILER=gcc \
 	{{# endif }}
-	-DCMAKE_BUILD_TYPE=Release
+	-DCMAKE_BUILD_TYPE=RelWithDebInfo
 RUN cmake --build ldc-build_-_stage-{{ $buildStageCounter }}
 
 ### Install
