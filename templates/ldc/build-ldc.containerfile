@@ -12,6 +12,11 @@ RUN tar -xf phobos.tar.gz -C ldc-source/runtime/phobos --strip-components=1
 	COPY resources/patches/ldc-alchemy-{{ $alchemyPatch }}.patch ldc-alchemy-{{ $alchemyPatch }}.patch
 	RUN patch -p1 < ldc-alchemy-{{ $alchemyPatch }}.patch
 {{# endif }}
+{{# if ($version->isSemanticTag() && ($semver->major === 1) && ($semver->minor <= 28) && $llvmHasCompilerRT): }}
+	COPY resources/patches/ldc-rt-path-1-28.patch ldc-rt-path-1-28.patch
+	RUN patch -p1 < ldc-rt-path-1-28.patch
+{{# endif }}
+
 
 ### Build
 RUN cmake \
