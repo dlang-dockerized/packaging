@@ -7,7 +7,7 @@ This document outlines the maintenance policies of the *dlang-dockerized* projec
 
 - Maintenance is limited to fixing compatibility issues of the packaging scripts with the corresponding software.
 - The provided *End of Life* (EOL) dates are non-binding estimations and subject to change without prior notice.
-- The provided maintenance timeslines are a voluntary and non-committal promise.
+- The provided maintenance timelines are a voluntary and non-committal promise.
 - These terms are subject to change without prior notice.
 
 
