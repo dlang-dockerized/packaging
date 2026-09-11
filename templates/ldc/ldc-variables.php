@@ -6,7 +6,7 @@ $isBootstrappedByLDC = isset($dependencies['ldc']);
 
 $druntimeMonorepo = match($version->type) {
 	VersionSpecifierType::SemanticTag => (($semver->major === 1) && ($semver->minor >= 31)),
-	VersionSpecifierType::Branch => $LDC_DRUNTIME_MONOREPO ?? false,
+	VersionSpecifierType::Branch => ($branch->name !== 'ltsmaster'),
 	VersionSpecifierType::Commit => $LDC_DRUNTIME_COMMIT ?? false,
 };
 
