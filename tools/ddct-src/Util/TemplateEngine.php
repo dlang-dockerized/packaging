@@ -202,7 +202,7 @@ final class TemplateEngine
                 $tplStack = $_eh->getStack();
                 $msg = (count($tplStack) === 0)
                         ? "Fatal error in template: " . $t->getMessage()
-                        : "Fatal error in template: {$tplStack[0]}): " . $t->getMessage();
+                        : "Fatal error in template: {$tplStack[0]}({$t->getLine()}): " . $t->getMessage();
                 foreach ($tplStack as $idx => $tplName) {
                     $msg .= "\n#{$idx} {$_te->makeTemplatePath($tplName)}";
                 }
