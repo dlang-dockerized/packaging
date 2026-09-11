@@ -4,6 +4,8 @@
 ### Install packages
 RUN DEBIAN_FRONTEND=noninteractive apt-get update
 RUN apt-get -y install \
+	binutils-dev \
+	binutils-gold \
 	build-essential \
 	curl \
 	git \
