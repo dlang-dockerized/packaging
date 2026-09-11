@@ -23,8 +23,9 @@ RUN cmake \
 	-B llvm-build \
 	-G Ninja \
 	-DCMAKE_BUILD_TYPE=Release \
+	-DLLVM_BINUTILS_INCDIR=/usr/include \
 	-DLLVM_ENABLE_PROJECTS="{{ $llvmProjectsString }}" \
-	{{# if ($semver->major >= 12): }}
+	{{# if ($llvmHasCompilerRT): }}
 		-DLLVM_ENABLE_RUNTIMES=compiler-rt \
 	{{# endif }}
 	-DCMAKE_INSTALL_PREFIX=/opt/llvm \
