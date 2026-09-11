@@ -38,6 +38,7 @@ FROM {{ $base_image }} AS export-stage
 {{< common/prepare-runtime-environment.containerfile }}
 
 COPY --from=llvm-imported /opt/llvm/bin /opt/llvm/bin
+COPY --from=llvm-imported /opt/llvm/lib/LLVMgold.so /opt/llvm/lib/LLVMgold.so
 
 {{# if (in_array('clang', $llvmProjects)): }}
 	RUN ln -s /opt/llvm/bin/clang /usr/local/bin/clang
@@ -46,9 +47,7 @@ COPY --from=llvm-imported /opt/llvm/bin /opt/llvm/bin
 {{# endif }}
 
 {{# if (in_array('lld', $llvmProjects)): }}
-	{{# if ($dependenciesVersion['llvm']->getValue()->major >= 10): }}
-		RUN ln -s /opt/llvm/bin/lld /usr/local/bin/ld
-	{{# endif }}
+	RUN ln -s /opt/llvm/bin/lld /usr/local/bin/ld
 	RUN ln -s /opt/llvm/bin/lld /usr/local/bin/ld.lld
 	RUN ln -s /opt/llvm/bin/lld /usr/local/bin/lld
 	RUN ln -s /opt/llvm/bin/lld /usr/local/bin/lld-link
