@@ -16,20 +16,34 @@ RUN tar -xf phobos.tar.gz -C ldc-source/runtime/phobos --strip-components=1
 ### Build
 RUN cmake \
 	-S ldc-source \
-	-B ldc-build \
+	-B ldc-build_-_stage-{{ $buildStageCounter }} \
 	-G Ninja \
-	-DCMAKE_BUILD_TYPE=Release \
 	-DCMAKE_INSTALL_PREFIX=/opt/ldc \
 	-DLLVM_ROOT_DIR=/opt/llvm \
-	{{# if ($buildStageCounter === 3): }}
+	{{# if (($buildStageCounter >= 2) && $llvmHasCompilerRT): }}
 		-DBUILD_LTO_LIBS=ON \
+		-DLDC_INSTALL_LTOPLUGIN=ON \
+		-DLDC_INSTALL_LLVM_RUNTIME_LIBS=ON \
+		{{# if ($version->isSemanticTag() && ($semver->major === 1) && ($semver->minor <= 30)): }}
+			-DLDC_INSTALL_LLVM_RUNTIME_LIBS_ARCH='' \
+			-DLDC_INSTALL_LLVM_RUNTIME_LIBS_OS="$(/opt/llvm/bin/clang -print-target-triple)" \
+		{{# endif }}
 	{{# endif }}
-	-DCMAKE_C_COMPILER=gcc \
-	-DCMAKE_CXX_COMPILER=g++ \
-	-DCMAKE_ASM_COMPILER=gcc
-RUN cmake --build ldc-build
+	{{# if (($buildStageCounter === 3) && in_array('lld', $llvmProjects) && $llvmHasCompilerRT): }}
+		-DLDC_BUILD_WITH_LTO=full \
+		-DCMAKE_C_COMPILER=/opt/llvm/bin/clang \
+		-DCMAKE_CXX_COMPILER=/opt/llvm/bin/clang++ \
+		-DCMAKE_ASM_COMPILER=gcc \
+		-DCMAKE_LINKER_TYPE=LLD \
+	{{# else: }}
+		-DCMAKE_C_COMPILER=gcc \
+		-DCMAKE_CXX_COMPILER=g++ \
+		-DCMAKE_ASM_COMPILER=gcc \
+	{{# endif }}
+	-DCMAKE_BUILD_TYPE=Release
+RUN cmake --build ldc-build_-_stage-{{ $buildStageCounter }}
 
 ### Install
-RUN cmake --install ldc-build
+RUN cmake --install ldc-build_-_stage-{{ $buildStageCounter }}
 ENV DMD=/opt/ldc/bin/ldmd2
 
