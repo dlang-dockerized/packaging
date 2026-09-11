@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DlangDockerized\Ddct\Util;
 
 use Exception;
+use Throwable;
 
 final class TemplateEngine
 {
@@ -194,7 +195,23 @@ final class TemplateEngine
             foreach ($_variables as $_name => $_value) {
                 $$_name = $_value;
             }
-            eval($_tplCode);
+
+            try {
+                eval($_tplCode);
+            } catch (Throwable $t) {
+                $tplStack = $_eh->getStack();
+                $msg = (count($tplStack) === 0)
+                        ? "Fatal error in template: " . $t->getMessage()
+                        : "Fatal error in template: {$tplStack[0]}): " . $t->getMessage();
+                foreach ($tplStack as $idx => $tplName) {
+                    $msg .= "\n#{$idx} {$_te->makeTemplatePath($tplName)}";
+                }
+                throw new Exception(
+                    $msg,   
+                    $t->getCode(),
+                    $t,
+                );
+            }
         })(
             $this,
             $this->errorHandlers,

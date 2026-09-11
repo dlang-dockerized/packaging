@@ -11,11 +11,15 @@ final class TemplateExecutionErrorHandlers
 {
     public const fileEndingCompiledTemplate = '.compiled-tpl.php';
 
-    private int $counter = 0;
+    private array $templateStack = [];
 
     public function __construct(
         private string $templateEnginePath,
     ) {
+    }
+
+    public function getStack(): array {
+        return array_reverse($this->templateStack);
     }
 
     public function push(string $templateName): void
@@ -35,18 +39,21 @@ final class TemplateExecutionErrorHandlers
             );
         }, E_ALL);
 
-        ++$this->counter;
+        array_push($this->templateStack, "{$templateName}{$fileEnding}");
     }
 
     public function pop(): void
     {
         restore_error_handler();
-        --$this->counter;
+        $popped = array_pop($this->templateStack);
+        if ($popped === null) {
+            throw new LogicException('No error handlers to pop.');
+        }
     }
 
     public function resetAndCheck(): void
     {
-        if ($this->counter !== 0) {
+        if (count($this->templateStack) !== 0) {
             throw new LogicException('Popped less error handlers than pushed.');
         }
     }
