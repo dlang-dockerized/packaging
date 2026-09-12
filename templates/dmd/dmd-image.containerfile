@@ -18,13 +18,12 @@ WORKDIR /opt/build
 {{< common/install-common-system-tools.containerfile }}
 
 # Copy prebuilt LDC from {{ $container_namespace }}/ldc
-COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc-bootstrap/
-RUN sed -i 's/\/opt\/ldc/\/opt\/ldc-bootstrap/g' /opt/ldc-bootstrap/etc/ldc2.conf
+COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc/
+RUN ln -s /opt/ldc/bin/ldmd2 /usr/local/bin/dmd
 
 # Download, build and install DMD
 
 {{< dmd/download-dmd-source.containerfile }}
-RUN ln -s /opt/ldc-bootstrap/bin/ldmd2 /usr/local/bin/dmd
 
 {{< dmd/build-dmd.containerfile }}
 
