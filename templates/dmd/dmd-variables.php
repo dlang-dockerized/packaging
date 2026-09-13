@@ -20,3 +20,8 @@ $legacyMakefile = match($version->type) {
 	VersionSpecifierType::Branch,
 	VersionSpecifierType::Commit => $DMD_LEGACY_MAKEFILE ?? false,
 };
+
+if (!$dependenciesVersion['ldc']->isSemanticTag()) {
+	throw new \Exception('These templates only support LDC versions in the form of semantic tags.');
+}
+$ldcVersion = $dependenciesVersion['ldc']->getValue();

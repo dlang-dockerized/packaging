@@ -25,6 +25,10 @@ RUN tar -xf phobos.tar.gz -C phobos --strip-components=1
 ### Build DMD compiler
 {{# if ($dmdBuildD): }}
 	RUN \
+		{{# if (($ldcVersion->major >= 2) || (($ldcVersion->major === 1) && ($ldcVersion->minor >= 30))): }}
+			ENABLE_LTO=1 \
+			ENABLE_RELEASE=1 \
+		{{# endif }}
 		HOST_DMD_KIND=ldc \
 		HOST_DMD_PATH=/opt/ldc/bin/ldc2 \
 		/opt/ldc/bin/ldc2 -run \
