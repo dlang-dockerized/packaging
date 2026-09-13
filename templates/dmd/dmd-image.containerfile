@@ -19,7 +19,13 @@ WORKDIR /opt/build
 
 # Copy prebuilt LDC from {{ $container_namespace }}/ldc
 COPY --from=ldc-bootstrap-imported /opt/ldc/ /opt/ldc/
+COPY --from=ldc-bootstrap-imported /opt/llvm/bin/lld /opt/llvm/bin/lld
+
 RUN ln -s /opt/ldc/bin/ldmd2 /usr/local/bin/dmd
+RUN ln -s /opt/llvm/bin/lld /usr/local/bin/ld
+RUN ln -s /opt/llvm/bin/lld /usr/local/bin/ld.lld
+RUN ln -s /opt/llvm/bin/lld /usr/local/bin/lld
+RUN ln -s /opt/llvm/bin/lld /usr/local/bin/lld-link
 
 # Download, build and install DMD
 
