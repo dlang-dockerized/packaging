@@ -12,7 +12,7 @@ RUN tar -xf phobos.tar.gz -C phobos --strip-components=1
 	RUN tar -xf druntime.tar.gz -C druntime --strip-components=1
 {{# endif }}
 
-{{# if (!$version->isSemanticTag() || $semver->minor >= 82): }}
+{{# if ($dmdBuildD): }}
 	### Patch build script
 	COPY resources/patches/wrap-std-process-execute.d wrap-std-process-execute.d
 	{{# if ($druntimeMonorepo): }}
@@ -23,7 +23,18 @@ RUN tar -xf phobos.tar.gz -C phobos --strip-components=1
 {{# endif }}
 
 ### Build DMD compiler
-{{# if ($legacyMakefile): }}
+{{# if ($dmdBuildD): }}
+	RUN \
+		HOST_DMD_KIND=ldc \
+		HOST_DMD_PATH=/opt/ldc/bin/ldc2 \
+		/opt/ldc/bin/ldc2 -run \
+		{{# if ($druntimeMonorepo): }}
+			./dmd/compiler/src/build.d \
+		{{# else: }}
+			./dmd/src/build.d \
+		{{# endif }}
+			-- dmd
+{{# elseif ($legacyMakefile): }}
 	RUN make -C dmd -f posix.mak
 {{# else: }}
 	RUN make -C dmd
