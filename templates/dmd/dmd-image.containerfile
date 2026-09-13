@@ -61,6 +61,12 @@ COPY --from=build-stage /opt/build/phobos/etc /usr/include/dmd/phobos/etc
 COPY ./resources/dmd.conf /etc/dmd.conf
 COPY ./resources/scripts/entrypoint-dmd.sh /usr/local/bin/entrypoint
 
+COPY --from=ldc-bootstrap-imported /opt/llvm/bin/lld /opt/llvm/bin/lld
+RUN ln -s /opt/llvm/bin/lld /usr/local/bin/ld
+RUN ln -s /opt/llvm/bin/lld /usr/local/bin/ld.lld
+RUN ln -s /opt/llvm/bin/lld /usr/local/bin/lld
+RUN ln -s /opt/llvm/bin/lld /usr/local/bin/lld-link
+
 {{< d-tools/install-d-tools.containerfile }}
 
 # Self-test
