@@ -47,7 +47,7 @@ FROM {{ $base_image }} AS export-stage
 {{< common/prepare-runtime-environment.containerfile }}
 
 COPY --from=build-stage /opt/build/dmd/generated/linux/release/64/dmd /usr/local/bin/dmd
-COPY --from=build-stage /opt/build/phobos/generated/linux/release/64/* /usr/local/lib/
+COPY --from=build-stage /opt/build/phobos/generated/linux/release/64/* /usr/lib/
 {{# if ($druntimeMonorepo): }}
 	COPY --from=build-stage /opt/build/dmd/druntime/src /usr/include/dmd/druntime/import
 {{# else: }}
