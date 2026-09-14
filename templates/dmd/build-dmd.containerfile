@@ -53,3 +53,34 @@ ENV DMD=/usr/local/bin/dmd
 {{# else: }}
 	RUN make -C phobos
 {{# endif }}
+
+{{# if ($dmdBuildD && (($ldcVersion->major >= 2) || (($ldcVersion->major === 1) && ($ldcVersion->minor >= 30)))): }}
+	### Rebuild DMD with PGO
+	RUN ln -s /opt/ldc/bin/ldc-profdata /usr/local/bin/ldc-profdata
+	WORKDIR /opt/build/dmd
+	RUN \
+		ENABLE_RELEASE=1 \
+		HOST_DMD=/opt/ldc/bin/ldmd2 \
+		/opt/ldc/bin/ldmd2 -run \
+		{{# if ($druntimeMonorepo): }}
+			./compiler/src/build.d \
+		{{# else: }}
+			./src/build.d \
+		{{# endif }}
+			-- --force dmd-pgo
+	WORKDIR /opt/build
+
+	#### Rebuild druntime + Phobos
+	RUN find phobos -type f -name '*.d' -exec touch {} \;
+	{{# if ($druntimeMonorepo): }}
+		RUN find dmd/druntime/src -type f -name '*.d' -exec touch {} \;
+	{{# else: }}
+		RUN find druntime/src -type f -name '*.d' -exec touch {} \;
+	{{# endif }}
+	{{# if ($legacyMakefile): }}
+		RUN make -C phobos -f posix.mak
+	{{# else: }}
+		RUN make -C phobos
+	{{# endif }}
+{{# endif }}
+
