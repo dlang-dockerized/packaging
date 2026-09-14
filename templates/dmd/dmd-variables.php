@@ -5,13 +5,13 @@ use DlangDockerized\Ddct\Datatype\VersionSpecifierType;
 $dmdBuildD = match($version->type) {
 	VersionSpecifierType::SemanticTag => ($version->semanticTag->minor >= 82),
 	VersionSpecifierType::Branch,
-	VersionSpecifierType::Commit => $DMD_NO_BUILDD ?? false,
+	VersionSpecifierType::Commit => $DMD_NO_BUILDD ?? true,
 };
 
 $druntimeMonorepo = match($version->type) {
 	VersionSpecifierType::SemanticTag => ($version->semanticTag->minor >= 101),
 
-	VersionSpecifierType::Branch => $DMD_DRUNTIME_MONOREPO ?? false,
+	VersionSpecifierType::Branch => true,
 	VersionSpecifierType::Commit => $DMD_DRUNTIME_COMMIT ?? false,
 };
 
