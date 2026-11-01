@@ -8,6 +8,15 @@ $dmdBuildD = match($version->type) {
 	VersionSpecifierType::Commit => $DMD_NO_BUILDD ?? true,
 };
 
+$dmdPgoMakefile = match($version->type) {
+	VersionSpecifierType::SemanticTag => (
+		($version->semanticTag->minor >= 114) ||
+		($version->semanticTag->minor == 113) && ($version->semanticTag->patch >= 1)
+	),
+	VersionSpecifierType::Branch,
+	VersionSpecifierType::Commit => $DMD_NO_PGO_MAKEFILE ?? true,
+};
+
 $druntimeMonorepo = match($version->type) {
 	VersionSpecifierType::SemanticTag => ($version->semanticTag->minor >= 101),
 

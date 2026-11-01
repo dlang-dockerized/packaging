@@ -58,16 +58,25 @@ ENV DMD=/usr/local/bin/dmd
 	### Rebuild DMD with PGO
 	RUN ln -s /opt/ldc/bin/ldc-profdata /usr/local/bin/ldc-profdata
 	WORKDIR /opt/build/dmd
-	RUN \
-		ENABLE_RELEASE=1 \
-		HOST_DMD=/opt/ldc/bin/ldmd2 \
-		/opt/ldc/bin/ldmd2 -run \
-		{{# if ($druntimeMonorepo): }}
-			./compiler/src/build.d \
-		{{# else: }}
-			./src/build.d \
-		{{# endif }}
-			-- --force dmd-pgo
+	{{# if ($dmdPgoMakefile): }}
+		RUN \
+			ENABLE_LTO=1 \
+			ENABLE_RELEASE=1 \
+			HOST_DMD=/opt/ldc/bin/ldmd2 \
+			make dmd-pgo
+	{{# else: }}
+		RUN \
+			ENABLE_LTO=1 \
+			ENABLE_RELEASE=1 \
+			HOST_DMD=/opt/ldc/bin/ldmd2 \
+			/opt/ldc/bin/ldmd2 -run \
+			{{# if ($druntimeMonorepo): }}
+				./compiler/src/build.d \
+			{{# else: }}
+				./src/build.d \
+			{{# endif }}
+				-- --force dmd-pgo
+	{{# endif }}
 	WORKDIR /opt/build
 
 	#### Rebuild druntime + Phobos
