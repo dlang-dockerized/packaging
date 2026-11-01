@@ -15,10 +15,10 @@ This document outlines the maintenance policies of the *dlang-dockerized* projec
 
 ### Base images
 
-| Image            | Version       |        EOL |
-| :--------------- | :------------ | ---------: |
-| docker.io/debian | bookworm-slim | 2026-07-31 |
-| docker.io/debian | trixie-slim   | 2030-06-30 |
+| Image            | Version           |        EOL |
+| :--------------- | :---------------- | ---------: |
+| docker.io/debian | ~~bookworm-slim~~ | 2026-07-31 |
+| docker.io/debian | trixie-slim       | 2030-06-30 |
 
 ### Software
 
@@ -40,3 +40,4 @@ This document outlines the maintenance policies of the *dlang-dockerized* projec
 | DMD    |     v2.111 |      2027-03-31 | Courtesy of @0xEAB                                                           |
 | DMD    |     v2.112 |      2027-12-31 | Courtesy of @0xEAB                                                           |
 | DMD    |     v2.113 |      2027-12-31 | Courtesy of @0xEAB                                                           |
+| DMD    |     v2.114 |      2028-12-31 | Courtesy of @0xEAB                                                           |
